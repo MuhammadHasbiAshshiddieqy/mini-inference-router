@@ -7,7 +7,10 @@ import { createLogger } from "./logger.ts";
 
 function buildApp() {
   const env = loadEnv({ DATABASE_URL: "postgres://u:p@localhost:5432/router", ADMIN_API_KEY: "test-admin" });
-  const app = createApp({ env, logger: createLogger("silent") });
+  const getPool = () => {
+    throw new Error("these tests must not touch the database");
+  };
+  const app = createApp({ env, logger: createLogger("silent"), getPool });
   // Test-only routes to exercise the error middleware.
   app.get("/test/app-error", () => {
     throw new AppError("quota_exceeded", 429, "Token quota exhausted", { remaining: 0 });
@@ -60,7 +63,7 @@ describe("gateway app", () => {
   });
 
   it("returns the JSON error shape for unknown routes", async () => {
-    const res = await buildApp().request("/v1/nope", { method: "POST" });
+    const res = await buildApp().request("/nope", { method: "POST" });
     expect(res.status).toBe(404);
     const body = ErrorResponseSchema.parse(await res.json());
     expect(body.error.code).toBe("not_found");

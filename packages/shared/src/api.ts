@@ -1,6 +1,9 @@
 import { z } from "zod";
 import {
+  AttemptStatusSchema,
+  BackendIdSchema,
   ConfidenceSchema,
+  EndpointSchema,
   ErrorCodeSchema,
   OutcomeSchema,
   QuotaStateSchema,
@@ -117,3 +120,106 @@ export const SupportResponseSchema = z.object({
   escalated: z.boolean(),
 });
 export type SupportResponse = z.infer<typeof SupportResponseSchema>;
+
+// ---- Usage and admin views (docs/03 §3, docs/06) ----
+
+const count = z.number().int().nonnegative();
+
+export const TenantUsageSchema = z.object({
+  requests: count,
+  total_tokens: count,
+  cost_usd: z.number().nonnegative(), // list-price equivalent ("est."), for display; stored exactly as numeric(12,8)
+  fallback_count: count,
+  outcomes: z.record(z.string(), count), // e.g. { ok: 12, refused: 2, quota_exceeded: 1 }
+  last_request_at: z.string().nullable(),
+});
+export type TenantUsage = z.infer<typeof TenantUsageSchema>;
+
+// GET /v1/usage: the calling tenant only.
+export const UsageResponseSchema = z.object({
+  tenant: z.object({ id: z.string(), name: z.string() }),
+  quota: QuotaStateSchema,
+  policy: z.object({
+    allowed_backends: z.array(BackendIdSchema),
+    allow_debug: z.boolean(),
+    max_output_tokens: count,
+  }),
+  usage: TenantUsageSchema,
+});
+export type UsageResponse = z.infer<typeof UsageResponseSchema>;
+
+// GET /admin/usage: every tenant.
+export const AdminUsageResponseSchema = z.object({
+  tenants: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      enabled: z.boolean(),
+      quota: QuotaStateSchema,
+      usage: TenantUsageSchema,
+    }),
+  ),
+});
+export type AdminUsageResponse = z.infer<typeof AdminUsageResponseSchema>;
+
+export const RequestRowSchema = z.object({
+  id: z.string(),
+  tenant_id: z.string().nullable(),
+  endpoint: EndpointSchema,
+  profile: z.string(),
+  outcome: OutcomeSchema,
+  served_backend_id: z.string().nullable(),
+  served_model: z.string().nullable(),
+  fallback_fired: z.boolean(),
+  escalated: z.boolean(),
+  attempts_count: count,
+  prompt_tokens: count,
+  completion_tokens: count,
+  thinking_tokens: count,
+  total_tokens: count,
+  tokens_estimated: z.boolean(),
+  cost_usd: z.string(), // exact decimal string from numeric(12,8)
+  latency_ms: count.nullable(),
+  ttft_ms: count.nullable(),
+  intent: z.string().nullable(),
+  confidence_level: z.string().nullable(),
+  confidence_score: z.number().nullable(),
+  retrieved_ids: z.array(z.string()).nullable(),
+  retrieval_mode: z.string().nullable(),
+  error_code: z.string().nullable(),
+  created_at: z.string(),
+});
+export type RequestRow = z.infer<typeof RequestRowSchema>;
+
+export const RouteAttemptRowSchema = z.object({
+  attempt_no: z.number().int().positive(),
+  backend_id: z.string(),
+  model: z.string(),
+  reason: z.string(),
+  status: AttemptStatusSchema,
+  error_detail: z.string().nullable(),
+  prompt_tokens: count.nullable(),
+  completion_tokens: count.nullable(),
+  thinking_tokens: count.nullable(),
+  cost_usd: z.string(),
+  latency_ms: count.nullable(),
+  ttft_ms: count.nullable(),
+  started_at: z.string(),
+});
+export type RouteAttemptRow = z.infer<typeof RouteAttemptRowSchema>;
+
+// GET /admin/requests?tenant=&outcome=&limit=
+export const AdminRequestsQuerySchema = z.strictObject({
+  tenant: z.string().min(1).optional(),
+  outcome: OutcomeSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+export const AdminRequestsResponseSchema = z.object({ requests: z.array(RequestRowSchema) });
+export type AdminRequestsResponse = z.infer<typeof AdminRequestsResponseSchema>;
+
+// GET /admin/requests/:id — the fallback decision record (R9).
+export const AdminRequestDetailSchema = z.object({
+  request: RequestRowSchema,
+  attempts: z.array(RouteAttemptRowSchema),
+});
+export type AdminRequestDetail = z.infer<typeof AdminRequestDetailSchema>;

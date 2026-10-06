@@ -65,10 +65,10 @@ Read: `docs/03` §5, §6, §9.
 
 ## Phase 3: Auth, quota, metering skeleton
 Read: `docs/03` §2–§7.
-- [ ] Middleware: body size limit (64 KB), JSON content-type, auth (Bearer / x-api-key → sha256 lookup), tenant on context.
-- [ ] `quota/reserve.ts` + `quota/reconcile.ts` (atomic SQL; fail closed → 503).
-- [ ] `metering/`: insert `requests` row at start (`in_progress`), record attempts, finalize; cost calc from `config/pricing.ts`.
-- [ ] `GET /v1/usage`, `GET /admin/usage`, `GET /admin/requests`, `GET /admin/requests/:id` (admin key).
+- [x] Middleware: body size limit (64 KB), JSON content-type, auth (Bearer / x-api-key → sha256 lookup), tenant on context.
+- [x] `quota/reserve.ts` + `quota/reconcile.ts` (atomic SQL; fail closed → 503).
+- [x] `metering/`: insert `requests` row at start (`in_progress`), record attempts, finalize; cost calc from `config/pricing.ts`.
+- [x] `GET /v1/usage`, `GET /admin/usage`, `GET /admin/requests`, `GET /admin/requests/:id` (admin key).
 **Tests:** 401 missing/invalid; 403 disabled; 400 invalid body; 413; 415; quota exceeded → 429 + row; **DB down → 503 and no backend call**; concurrency (quota for N, 3N parallel → ≤ N succeed); reconcile math.
 **Commit:** `feat(gateway): auth, fail-closed quota, metering`
 

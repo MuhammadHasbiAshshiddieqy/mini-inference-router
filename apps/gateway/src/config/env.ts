@@ -48,7 +48,11 @@ const EnvSchema = z.object({
   MOCK_LATENCY_MS: z.coerce.number().int().min(0).max(20_000).default(300),
   MOCK_FAIL_RATE: unitInterval.default(0),
 
-  LOCAL_COST_PER_1M: z.coerce.number().min(0).default(0),
+  // Decimal string (not a float), so cost math stays exact (see config/pricing.ts).
+  LOCAL_COST_PER_1M: z
+    .string()
+    .regex(/^\d+(\.\d{1,6})?$/, "must be a decimal USD amount with at most 6 decimals")
+    .default("0"),
 
   RETRIEVAL_TOP_K: positiveInt.max(20).default(5),
   RETRIEVAL_MODE: z.enum(["dense", "hybrid"]).default("dense"),

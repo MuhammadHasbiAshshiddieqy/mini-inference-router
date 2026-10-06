@@ -29,21 +29,24 @@
 ## 2. Request lifecycle: `POST /v1/support/answer`
 
 1. **request-id** middleware: generate a UUIDv7 `request_id` and set the `x-request-id` response header.
-2. **Body validation** (Zod): JSON only, `message` 1–2000 chars after trim, `max_output_tokens` ≤ tenant cap, optional `debug` block. Failure → 400 `invalid_request` (no LLM call).
-3. **Auth**: `Authorization: Bearer <key>` (or `x-api-key`). SHA-256 the key, then look up `tenants.api_key_hash`. Missing → 401 `missing_api_key`. Unknown → 401 `invalid_api_key`. Disabled → 403 `tenant_disabled`.
-4. **Quota reserve** (atomic, see §5). Insufficient → 429 `quota_exceeded`, with a `requests` row (outcome `quota_exceeded`). DB error → 503 `quota_unavailable` (fail closed).
-5. Open the **SSE stream**. Send a `meta` event.
-6. **Retrieve** (doc 05 §2): normalize + embed the query, then `dense` or `hybrid` (dense + pg_trgm, RRF) top-k (k=5). If embedding fails → `lexical_fallback` (trigram only). Send a `retrieval` event including `mode`.
-7. **Pre-LLM gate**: if `top1_similarity < T_oos`, emit `refusal` (reason `low_retrieval_similarity`), skip the LLM, go to step 11.
-8. **Router plan** → candidate list (tenant policy, capabilities, priority).
-9. **Router execute**: try candidates in order. Each attempt emits `route`, and on failure `attempt_failed`. Fallback happens **only before the first token is sent to the client**.
-10. **Parse** the model stream: header `INTENT: <label>` then `---` then the answer.
+2. **Body size and type**: body > 64 KB → 413 `payload_too_large`; not `application/json` → 415 `unsupported_media_type`. Both before auth.
+3. **Auth**: `Authorization: Bearer <key>` (or `x-api-key`). SHA-256 the key, then look up `tenants.api_key_hash`. Missing → 401 `missing_api_key`. Unknown → 401 `invalid_api_key`. Disabled → 403 `tenant_disabled`. Tenant store unreachable → 503 `quota_unavailable` (fail closed; tenants and quota live in the same database).
+4. **Body validation** (Zod) and **tenant policy**: `message` 1–2000 chars after trim, `max_output_tokens` ≤ tenant cap, `debug` only if `allow_debug` (else 403 `debug_not_allowed`). Failure → 400 `invalid_request` (no LLM call), recorded as one `requests` row (outcome `invalid_request`, `error_code` = the error code).
+   Validation runs **after** auth (an earlier draft had it before): the output cap depends on the tenant, rejected requests from a known tenant must be metered (doc 01 §4), and unauthenticated callers do not get validation details.
+5. **Quota reserve** (atomic, see §5). Insufficient → 429 `quota_exceeded`, with a `requests` row (outcome `quota_exceeded`). DB error → 503 `quota_unavailable` (fail closed). Then the `requests` row is inserted as `in_progress` (if that insert fails, the reservation is released and the request gets 503).
+   Steps 4–5 live in `http/admission.ts` (`admit`); `settle` reconciles quota and finalizes the row at the end.
+6. Open the **SSE stream**. Send a `meta` event.
+7. **Retrieve** (doc 05 §2): normalize + embed the query, then `dense` or `hybrid` (dense + pg_trgm, RRF) top-k (k=5). If embedding fails → `lexical_fallback` (trigram only). Send a `retrieval` event including `mode`.
+8. **Pre-LLM gate**: if `top1_similarity < T_oos`, emit `refusal` (reason `low_retrieval_similarity`), skip the LLM, go to step 12.
+9. **Router plan** → candidate list (tenant policy, capabilities, priority).
+10. **Router execute**: try candidates in order. Each attempt emits `route`, and on failure `attempt_failed`. Fallback happens **only before the first token is sent to the client**.
+11. **Parse** the model stream: header `INTENT: <label>` then `---` then the answer.
     - Invalid header → abort the attempt, **escalate once** (see doc 05) → still invalid → refusal `unusable_model_output`.
     - Valid → compute confidence → `intent` event → if refuse: abort generation and send a `refusal` event; else stream `token` events.
-11. **Reconcile quota** with the actual tokens. **Write metering** (`requests` final row, all `route_attempts`). Send `done`. Close the stream.
-12. Client disconnect at any point → abort upstream (AbortSignal), record outcome `client_aborted`, reconcile quota with the tokens actually consumed.
+12. **Reconcile quota** with the actual tokens. **Write metering** (`requests` final row, all `route_attempts`). Send `done`. Close the stream.
+13. Client disconnect at any point → abort upstream (AbortSignal), record outcome `client_aborted`, reconcile quota with the tokens actually consumed.
 
-`POST /v1/chat` is the same minus steps 6, 7 and 10: the messages go straight to the router, and tokens stream through.
+`POST /v1/chat` is the same minus steps 7, 8 and 11: the messages go straight to the router, and tokens stream through.
 
 ## 3. HTTP API
 

@@ -84,10 +84,10 @@ Owner only (accounts and keys; Claude cannot do these):
 - **Commit:** `feat(db): schema, seed, KB embeddings in pgvector`
 
 ## Phase 3 — Auth, quota, metering skeleton (docs/03 §2–7)
-- [ ] Middleware: 64 KB body limit (413), JSON only (415), auth Bearer / `x-api-key` → sha256 lookup (401 / 403 `tenant_disabled`)
-- [ ] `quota/reserve.ts` (atomic UPDATE … RETURNING; 429 `quota_exceeded` with details; DB error → 503 `quota_unavailable`) and `quota/reconcile.ts` (in `finally`; never refund on uncertainty)
-- [ ] `metering/`: insert `requests` row as `in_progress`, record attempts, finalize; cost from `config/pricing.ts` (`numeric(12,8)`)
-- [ ] Routes: `GET /v1/usage`, `GET /admin/usage`, `GET /admin/requests`, `GET /admin/requests/:id`
+- [x] Middleware: 64 KB body limit (413), JSON only (415), auth Bearer / `x-api-key` → sha256 lookup (401 / 403 `tenant_disabled`)
+- [x] `quota/reserve.ts` (atomic UPDATE … RETURNING; 429 `quota_exceeded` with details; DB error → 503 `quota_unavailable`) and `quota/reconcile.ts` (in `finally`; never refund on uncertainty)
+- [x] `metering/`: insert `requests` row as `in_progress`, record attempts, finalize; cost from `config/pricing.ts` (`numeric(12,8)`)
+- [x] Routes: `GET /v1/usage`, `GET /admin/usage`, `GET /admin/requests`, `GET /admin/requests/:id`
 - **Tests:** 401 missing/invalid · 403 disabled · 400 · 413 · 415 · 429 + row · DB down → 503, no backend call · concurrency (quota N, 3N parallel → ≤ N succeed) · reconcile math
 - **Commit:** `feat(gateway): auth, fail-closed quota, metering`
 

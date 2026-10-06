@@ -83,10 +83,10 @@ Priority: **P0** = must ship. **P1** = should ship. **P2** = only if time remain
 | ID | Requirement | Pri | Where implemented | Evidence |
 |---|---|---|---|---|
 | R1 | Chat endpoint with streaming (SSE) | P0 | `routes/chat.ts`, `http/sse.ts` | test `chat.stream.test.ts`, console playground, video |
-| R2 | Per-tenant API key auth | P0 | `http/auth.ts` (hashed keys in `tenants`) | tests: missing/invalid key → 401 |
-| R3 | Per-tenant quota, fails closed, clear error | P0 | `quota/reserve.ts` (atomic reserve + reconcile) | tests: exhausted → 429 `quota_exceeded`; DB down → 503 `quota_unavailable`; concurrency test |
+| R2 | Per-tenant API key auth | P0 | `http/auth.ts` (hashed keys in `tenants`) | `request-path.test.ts`: missing/invalid key → 401, disabled → 403 |
+| R3 | Per-tenant quota, fails closed, clear error | P0 | `quota/quota.ts` (atomic reserve + reconcile), `http/admission.ts` | `request-path.test.ts`: exhausted → 429 `quota_exceeded`; DB down → 503 `quota_unavailable`, no backend call; concurrency (3N parallel → exactly N admitted) |
 | R4 | Tenant policy: "enforces what each tenant is allowed" | P0 | `tenants.allowed_backends`, `max_output_tokens` | test: disallowed backend never attempted |
-| R5 | Metering: model, tokens, latency, est. cost, outcome → DB | P0 | `metering/*`, tables `requests`, `route_attempts` | test asserts rows; console Requests view |
+| R5 | Metering: model, tokens, latency, est. cost, outcome → DB | P0 | `metering/*`, `config/pricing.ts`, tables `requests`, `route_attempts` | `request-path.test.ts` asserts rows; `pricing.test.ts`; console Requests view |
 | R6 | ≥2 model backends | P0 | `backends/gemini.ts`, `ollama.ts`, `mock.ts` | profiles in `config/profiles.ts` |
 | R7 | Defensible routing rules | P0 | `router/plan.ts` (pure function) | unit tests per rule; report section with eval numbers |
 | R8 | Fallback on failure or slowness | P0 | `router/execute.ts` | tests: 5xx, 429, TTFT timeout, network error → next backend |
