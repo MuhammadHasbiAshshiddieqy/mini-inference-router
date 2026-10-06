@@ -17,9 +17,9 @@
     "db:seed": "node --env-file-if-exists=.env scripts/seed.ts",
     "kb:embed": "node --env-file-if-exists=.env scripts/embed_kb.ts",
     "calibrate": "node --env-file-if-exists=.env scripts/calibrate.ts",
-    "eval:retrieval": "echo 'eval:retrieval is implemented in Phase 8' && exit 1",
-    "eval": "echo 'eval is implemented in Phase 8' && exit 1",
-    "eval:compare": "echo 'eval:compare is implemented in Phase 8' && exit 1"
+    "eval:retrieval": "node --env-file-if-exists=.env scripts/eval-retrieval.ts",
+    "eval": "node --env-file-if-exists=.env scripts/eval.ts",
+    "eval:compare": "node scripts/eval-compare.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

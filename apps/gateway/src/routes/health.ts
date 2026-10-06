@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 import type { BackendRegistry } from "../backends/registry.ts";
 import { probeOllama, type OllamaStatus } from "../backends/ollama-health.ts";
+import { PROMPT_VERSION } from "../assistant/prompt.ts";
 import type { AssistantReadiness } from "../assistant/readiness.ts";
 import { embeddingModelFor, type Env } from "../config/env.ts";
+import type { ThresholdsResult } from "../config/thresholds.ts";
 import type { AppEnv } from "../http/types.ts";
 
 export type OllamaProbe = (host: string, models: string[]) => Promise<OllamaStatus>;
@@ -16,6 +18,7 @@ export function healthRoutes(
   registry: BackendRegistry,
   checkAssistant: () => Promise<AssistantReadiness>,
   probe: OllamaProbe = probeOllama,
+  thresholds?: ThresholdsResult,
 ) {
   return new Hono<AppEnv>().get("/healthz", async (c) => {
     const usesOllama = registry.backends.some((b) => b.spec.kind === "ollama");
@@ -30,6 +33,8 @@ export function healthRoutes(
         profile: env.PROFILE,
         embedding_model: embeddingModelFor(env),
         retrieval_mode: env.RETRIEVAL_MODE,
+        prompt_version: PROMPT_VERSION,
+        thresholds: thresholds?.ok ? thresholds.thresholds : null,
         thinking_level: registry.backends.some((b) => b.spec.kind === "gemini") ? env.GEMINI_THINKING_LEVEL : null,
         backends: registry.backends.map(({ spec }) => ({
           id: spec.id,

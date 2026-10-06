@@ -108,9 +108,9 @@ Read: `docs/06`.
 
 ## Phase 8: Evaluation
 Read: `docs/07`.
-- [ ] `scripts/eval-retrieval.ts` (doc 07 §2b): dense vs hybrid vs lexical over 297 + 20 queries with nomic. **Apply the decision rule and set the `RETRIEVAL_MODE` default**; record the result for the report.
-- [ ] `scripts/eval.ts`, `scripts/eval-compare.ts`, shared SSE parser reuse.
-- [ ] Run config B (`local-ollama`) now. Config A runs after Phase 9 (needs Gemini embeddings and thresholds).
+- [x] `scripts/eval-retrieval.ts` (doc 07 §2b): dense vs hybrid vs lexical over 297 + 20 queries with nomic. **Apply the decision rule and set the `RETRIEVAL_MODE` default**; record the result for the report.
+- [x] `scripts/eval.ts`, `scripts/eval-compare.ts`, shared SSE parser reuse.
+- [x] Run config B (`local-ollama`) now. Config A runs after Phase 9 (needs Gemini embeddings and thresholds).
 **Commit:** `feat(eval): end-to-end eval runner and comparison`
 
 ## Phase 9: Cloud profile + deploy

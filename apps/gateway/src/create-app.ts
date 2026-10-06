@@ -73,6 +73,7 @@ export function createApp({
       registry,
       checkAssistant ?? (() => checkAssistantReadiness(getPool(), embeddingModel, thresholds)),
       probeOllama,
+      thresholds,
     ),
   );
 

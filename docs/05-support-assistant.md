@@ -18,7 +18,7 @@ message ─► validate ─► normalize ─► embed(query) ──┬─► den
 ## 2. Retrieval (`assistant/retrieve.ts`)
 
 Three modes, chosen by `RETRIEVAL_MODE` (`dense` | `hybrid`). `lexical_fallback` is entered automatically when embedding fails.
-**The default is decided by the retrieval eval (doc 07 §2b).** Start with `dense`, and switch the default only if hybrid wins
+**The default is decided by the retrieval eval (doc 07 §2b). Result: `dense` (hybrid −1.0 pp hit@1, −1.7 pp kNN accuracy on 297 queries).** Start with `dense`, and switch the default only if hybrid wins
 without hurting OOS refusal.
 
 ### 2.1 Core principle: separate ranking from gating

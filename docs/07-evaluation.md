@@ -49,6 +49,18 @@ pnpm eval:retrieval -- --embedding nomic-embed-text|gemini --sets dev,eval,dev_o
 - Otherwise keep `dense` and report hybrid as "measured, no gain on this dataset". That is still a valid, evidence-based outcome.
 - The `lexical` column documents how much quality the fallback loses (expected: noticeably lower), which justifies the medium-confidence cap.
 
+### Result (2026-10-06, `nomic-embed-text`, `eval/results/retrieval-nomic-embed-text.json`)
+
+| in-domain n=297 | dense | hybrid | lexical | hybrid − dense |
+|---|---|---|---|---|
+| hit@1 | 96.0% | 94.9% | 89.9% | −1.0 pp |
+| kNN intent accuracy | 96.6% | 94.9% | 91.2% | −1.7 pp |
+| kNN accuracy, hard flags (n=165) | 95.2% | 92.7% | 90.3% | −2.4 pp |
+| kNN accuracy, confusable (n=143) | 97.2% | 94.4% | 93.7% | −2.8 pp |
+| OOS gate recall (eval, n=5) / false-gate (eval, n=27) | 100% / 7.4% | 100% / 7.4% | 100% / 7.4% | 0 |
+
+**Decision: `RETRIEVAL_MODE=dense`** ("measured, no gain on this dataset"). Hybrid is worse on every ranking metric, including hard-flag (typo) queries: the queries are short, placeholders are stripped, and trigram overlap on generic words ("order", "refund") pulls in neighbouring intents. Gate metrics are identical by construction (gating is dense in both). Lexical fallback loses ~6 pp hit@1, which supports capping its confidence at `medium`.
+
 ## 3. Metrics (per config)
 
 | Metric | Definition |
@@ -57,7 +69,7 @@ pnpm eval:retrieval -- --embedding nomic-embed-text|gemini --sets dev,eval,dev_o
 | **Retrieval hit@1 / hit@5** | gold intent is the top-1 / within the top-5 retrieved intents (for the active `RETRIEVAL_MODE`; see §2b for the mode comparison) |
 | **Refusal** | OOS refusal rate (refused OOS / 5) and in-domain false-refusal rate (refused in-domain / 27) |
 | **Answer quality (1): semantic similarity** | cosine(answer, gold `response`) using **one fixed scorer embedding model for all configs** (Gemini embedding, or nomic if offline; state which). Report the mean and the distribution. Only for answered in-domain cases. |
-| **Answer quality (2): LLM judge** (P1) | judge = `gemini-3.5-flash` with thinking `low`, temperature default. Rubric JSON `{correctness 1–5, groundedness 1–5, placeholder_fidelity 0/1, reason}` given the question, the gold response and the top-3 references. Mean scores. State the self-preference bias risk (same family as one generator). |
+| **Answer quality (2): LLM judge** (P1, **cut**: first item of the cut order; it would spend free-tier quota and add a self-preference bias) | judge = `gemini-3.5-flash` with thinking `low`, temperature default. Rubric JSON `{correctness 1–5, groundedness 1–5, placeholder_fidelity 0/1, reason}` given the question, the gold response and the top-3 references. Mean scores. State the self-preference bias risk (same family as one generator). |
 | **Latency** | TTFT and total, p50 / p95 (client-measured), plus server-reported values from `done` |
 | **Tokens** | mean prompt / completion / thinking per case |
 | **Cost** | total and mean USD per case (list-price equivalent), extrapolated per 1,000 requests |
@@ -81,6 +93,12 @@ pnpm eval -- --label cloud-minimal --gateway http://localhost:8787 --key $SEED_K
   5. notes on leakage and small-sample caveats (n=27 → one case = 3.7 pp; avoid over-claiming).
 - Before running: `pnpm db:seed --reset-usage` so the eval tenant has its full quota.
 - The eval tenant has `allow_debug`, but the eval must **not** use debug overrides. It measures the real path.
+
+### Built (Phase 8)
+
+`scripts/eval.ts` (runner), `scripts/eval-compare.ts` (report), `scripts/eval-retrieval.ts` (retrieval-only), metrics in `scripts/lib/eval-metrics.ts` (unit-tested). The scorer is fixed to `nomic-embed-text` for every configuration (it needs local Ollama while scoring). Mean token counts are per request that reached a model (pre-gate refusals excluded); cost per 1,000 requests uses all cases, because free refusals are part of the real mix.
+
+Config B `local-ollama` (2026-10-06): intent accuracy 88.9% (kNN alone 100%, LLM header 96%), OOS refusal 100%, in-domain false refusal 7.4% (2 hard-flag cases pre-gated at dense top-1 0.653 and 0.637 < T_oos 0.668), answer similarity 0.895, TTFT p50 1.13 s, escalation 3.1%. The third miss: "I'm trying to get my damn bills" — kNN `get_invoice` (right), LLM `check_invoice` twice; top-1 0.80 ≥ T_high but vote share < 0.8, so the table answers with the LLM intent.
 
 ## 5. Unit tests vs eval
 

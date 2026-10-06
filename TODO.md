@@ -129,10 +129,10 @@ Owner only (accounts and keys; Claude cannot do these):
 - **Commit:** `feat(console): playground, usage, request inspector`
 
 ## Phase 8 — Evaluation (docs/07)
-- [ ] `scripts/eval-retrieval.ts`: dense vs hybrid vs lexical over 297 + 20 queries (nomic); apply decision rule → set `RETRIEVAL_MODE` default; record outcome for report
-- [ ] `scripts/eval.ts` (sequential, delay, retry once on 429, fingerprint from `/healthz`, `eval/results/<label>.json`) and `scripts/eval-compare.ts` → `eval/report.md`
-- [ ] Optional P1: LLM judge (`--judge`)
-- [ ] Run config B `local-ollama`
+- [x] `scripts/eval-retrieval.ts`: dense vs hybrid vs lexical over 297 + 20 queries (nomic); apply decision rule → set `RETRIEVAL_MODE` default; record outcome for report
+- [x] `scripts/eval.ts` (sequential, delay, retry once on 429, fingerprint from `/healthz`, `eval/results/<label>.json`) and `scripts/eval-compare.ts` → `eval/report.md`
+- [x] ~~Optional P1: LLM judge~~ cut (logged in docs/10)
+- [x] Run config B `local-ollama`
 - **Commit:** `feat(eval): end-to-end eval runner and comparison`
 
 ## Phase 9 — Cloud + deploy (docs/08 §2–3)

@@ -70,6 +70,7 @@ Short version of docs/11-tech-decisions.md §12 (the "not used" table), with a l
 | Response caching | Would distort latency and cost measurement | Semantic cache keyed by embedding |
 | Charging embedding tokens to quota | Negligible cost; keeps the quota model simple | Add an embedding usage line to metering |
 | In-memory circuit breaker (docs/04 §4 rule 4, P2) | Per-instance state only helps warm serverless instances; per-request fallback with TTFT/total timeouts already moves past a failing backend, and every skip would need its own attempt row | Breaker state in Postgres keyed by backend id, recorded as `skipped_circuit_open` |
+| LLM-as-judge answer metric (docs/07 §3, P1) | First item of the cut order: it spends free-tier quota on every case and a Gemini judge would grade a Gemini answer (self-preference bias). Semantic similarity with one fixed scorer is kept | A judge from a different provider with a fixed rubric, run on a sample |
 | *(add actual cuts made during the build)* | | |
 
 ## Part C: Trade-offs to state explicitly
