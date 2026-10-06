@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import type { Pool } from "pg";
 import type { Logger } from "pino";
 import { checkAssistantReadiness, type AssistantReadiness } from "./assistant/readiness.ts";
@@ -52,6 +53,16 @@ export function createApp({
   const extras = { ...(waitUntil ? { waitUntil } : {}), ...(heartbeatMs ? { heartbeatMs } : {}) };
   const app = new Hono<AppEnv>();
   app.use(requestContext(logger));
+  // The console is a browser client on another origin (docs/06). Preflights are answered here, before auth.
+  app.use(
+    cors({
+      origin: env.CORS_ORIGINS,
+      allowMethods: ["GET", "POST", "OPTIONS"],
+      allowHeaders: ["authorization", "content-type", "x-api-key"],
+      exposeHeaders: ["x-request-id"],
+      maxAge: 600,
+    }),
+  );
   app.onError(errorHandler);
   app.notFound(notFoundHandler);
 

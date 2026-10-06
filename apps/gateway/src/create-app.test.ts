@@ -81,4 +81,27 @@ describe("gateway app", () => {
     const body = ErrorResponseSchema.parse(await res.json());
     expect(body.error.code).toBe("not_found");
   });
+
+  it("answers CORS preflights for the console origin only, before auth", async () => {
+    const preflight = (origin: string) =>
+      buildApp().request("/v1/support/answer", {
+        method: "OPTIONS",
+        headers: {
+          origin,
+          "access-control-request-method": "POST",
+          "access-control-request-headers": "authorization,content-type",
+        },
+      });
+    const allowed = await preflight("http://localhost:5173");
+    expect(allowed.status).toBe(204);
+    expect(allowed.headers.get("access-control-allow-origin")).toBe("http://localhost:5173");
+    expect(allowed.headers.get("access-control-allow-headers")).toMatch(/authorization/);
+    const other = await preflight("https://evil.example");
+    expect(other.headers.get("access-control-allow-origin")).toBeNull();
+  });
+
+  it("exposes x-request-id to browser clients", async () => {
+    const res = await buildApp().request("/healthz", { headers: { origin: "http://localhost:5173" } });
+    expect(res.headers.get("access-control-expose-headers")).toMatch(/x-request-id/i);
+  });
 });

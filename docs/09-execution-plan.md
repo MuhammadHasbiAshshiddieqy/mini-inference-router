@@ -101,8 +101,8 @@ Read: `docs/05`.
 
 ## Phase 7: Console
 Read: `docs/06`.
-- [ ] Vue app scaffold, Tailwind, router, `lib/sse.ts`, shared schemas.
-- [ ] Playground + inspector; Usage page; Request detail page (+ list if time).
+- [x] Vue app scaffold, Tailwind, router, `lib/sse.ts`, shared schemas.
+- [x] Playground + inspector; Usage page; Request detail page (+ list if time).
 **Verify:** manual run-through of every inspector section with Ollama and with forced failures; screenshot to `docs/img/`.
 **Commit:** `feat(console): playground, usage, request inspector`
 

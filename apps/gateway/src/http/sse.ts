@@ -47,9 +47,17 @@ export function openEventStream(
     }
   });
 
-  response.headers.set("Content-Type", "text/event-stream; charset=utf-8");
-  response.headers.set("Cache-Control", "no-cache, no-transform");
-  response.headers.set("X-Accel-Buffering", "no");
-  response.headers.set("Connection", "keep-alive");
+  // Set on both the context and the response: Hono copies context headers onto the final response when a
+  // middleware (e.g. CORS) touched c.res first, which would otherwise restore streamSSE's plain "no-cache".
+  const headers: Record<string, string> = {
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    "X-Accel-Buffering": "no",
+    Connection: "keep-alive",
+  };
+  for (const [name, value] of Object.entries(headers)) {
+    c.header(name, value);
+    response.headers.set(name, value);
+  }
   return response;
 }

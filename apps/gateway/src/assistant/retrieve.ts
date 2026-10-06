@@ -57,7 +57,7 @@ const vectorLiteral = (v: number[]) => `[${v.join(",")}]`;
 export async function denseSearch(db: Queryable, embedding: number[], model: string, k: number): Promise<Row[]> {
   const { rows } = await db.query<Row>(
     `SELECT id, intent, instruction, response, 1 - (embedding <=> $1::vector) AS dense_sim, NULL::real AS trgm_sim,
-            NULL::real AS rrf, row_number() OVER (ORDER BY embedding <=> $1::vector) AS dense_rank, NULL::bigint AS lex_rank
+            NULL::real AS rrf, row_number() OVER (ORDER BY embedding <=> $1::vector, id) AS dense_rank, NULL::bigint AS lex_rank
      FROM kb_entries WHERE embedding_model = $2
      ORDER BY embedding <=> $1::vector, id LIMIT $3`,
     [vectorLiteral(embedding), model, k],

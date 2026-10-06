@@ -121,10 +121,10 @@ Owner only (accounts and keys; Claude cannot do these):
 - **→ Day 1 checkpoint:** show owner curl transcript + DB rows
 
 ## Phase 7 — Console (docs/06)
-- [ ] Vue 3 + Vite + TS + Vue Router + Tailwind; `lib/sse.ts` (fetch stream, Zod-validated, Stop button)
-- [ ] `/playground`: tenant dropdown + custom key (sessionStorage), mode switch, debug controls (if `allow_debug`), example chips, placeholder chips, refusal card, inline error
-- [ ] Inspector: served by + badges, attempts timeline, intent + confidence, retrieved (mode badge, scores), metrics ("est."), raw events, link to request
-- [ ] `/usage` (admin key in sessionStorage, auto-refresh 10 s), `/requests/:id` (+ list if time)
+- [x] Vue 3 + Vite + TS + Vue Router + Tailwind; `lib/sse.ts` (fetch stream, Zod-validated, Stop button)
+- [x] `/playground`: tenant dropdown + custom key (sessionStorage), mode switch, debug controls (if `allow_debug`), example chips, placeholder chips, refusal card, inline error
+- [x] Inspector: served by + badges, attempts timeline, intent + confidence, retrieved (mode badge, scores), metrics ("est."), raw events, link to request
+- [x] `/usage` (admin key in sessionStorage, auto-refresh 10 s), `/requests/:id` (+ list if time)
 - **Verify:** manual run-through with Ollama and forced failures; screenshots in `docs/img/`
 - **Commit:** `feat(console): playground, usage, request inspector`
 

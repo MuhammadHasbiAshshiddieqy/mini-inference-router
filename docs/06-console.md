@@ -63,6 +63,15 @@ VITE_DEMO_TENANTS=[{"name":"acme (pro, debug)","key":"..."},{"name":"globex (res
 Exposing demo tenant keys in a public SPA is acceptable **for this demo only**: low quotas, and resettable via `db:seed --reset-usage`. Say so in the report.
 The admin key is never bundled.
 
+## 3b. Built (Phase 7)
+
+- Gateway CORS (`hono/cors`) allows `CORS_ORIGINS`, headers `authorization`, `content-type`, `x-api-key`, and exposes `x-request-id`; preflights are answered before auth.
+- `VITE_*` are read from the repo-root `.env` (`envDir: "../.."`). If `VITE_DEMO_TENANTS` is unset, `vite.config.ts` derives it from `SEED_KEY_ACME/GLOBEX/TINY` (public demo tenants only; the reviewer key is never bundled).
+- Run state is a pure reducer over the SSE events (`src/lib/run-state.ts`), so the inspector shows exactly what the gateway reported.
+- Demo deep link for the video and screenshots: `/playground?tenant=acme&mode=support&q=…&force_fail=ollama&embedding_outage=1&mock_fail=1&run=1`. It accepts demo tenant **names** only, never keys.
+- Screenshots (local profile, Ollama `gemma4:e2b-mlx`, 2026-10-06) in `docs/img/`: `playground-answer.png`, `playground-fallback.png`, `playground-lexical-fallback.png`, `playground-refusal.png`, `usage.png`, `request-detail.png`.
+- Found through the screenshots: equal-distance KB entries could show dense ranks out of order (`#5` before `#4`); the window function now uses the same `id` tie-break as the ORDER BY.
+
 ## 4. Quality bar
 
 - Clean, neutral UI. Tailwind defaults, one accent colour, readable monospace for metrics. Works at 1280 px wide (the video size). Mobile is not a goal.

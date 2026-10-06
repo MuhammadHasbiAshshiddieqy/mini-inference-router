@@ -4,6 +4,23 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "echo 'console: Vue app is scaffolded in Phase 7'"
+    "dev": "vite --port 5173 --strictPort",
+    "build": "vue-tsc --noEmit -p tsconfig.json && vite build",
+    "preview": "vite preview --port 5173",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@mir/shared": "workspace:*",
+    "vue": "^3.5.43",
+    "vue-router": "^5.3.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.2",
+    "vue-tsc": "^3.3.12"
   }
 }
