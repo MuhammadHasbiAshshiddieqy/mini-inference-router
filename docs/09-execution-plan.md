@@ -1,0 +1,139 @@
+# 09 — Execution Plan
+
+Setup of the slash command: the file `.claude/commands/phase.md` lives in a **hidden folder** (name starts with a dot).
+In macOS Finder press **Cmd+Shift+.** to show it, or copy it with the terminal: `mkdir -p .claude/commands && cp <download>/phase.md .claude/commands/`.
+Restart Claude Code (or reload the VS Code window) and type `/phase` to confirm that it appears.
+
+How to use this with Claude Code: run `/phase <n>` (see `.claude/commands/phase.md`), or paste
+"Execute Phase <n> of docs/09-execution-plan.md". Claude must read `CLAUDE.md` plus the docs listed for that phase, implement,
+run the verification, tick the boxes below, commit, and **stop** with a short summary and any proposed cuts.
+
+## Timeline (deadline Fri 9 Oct 2026, 13:00 WIB)
+
+| When | Phases | Exit criterion |
+|---|---|---|
+| Day 1 (Tue PM – Wed) | 0–6 | Support answer streams end-to-end locally with fallback + metering + quota, all tests green |
+| Day 2 (Thu) | 7–10 | Console done, eval run on 2 configs, Docker works, deployed to Vercel + Neon |
+| Day 3 (Fri AM) | 11–12 | Report, README, video, smoke test on prod, submit **before 12:00** (1 h buffer) |
+
+**Cut order if behind** (cut from the top, and log each cut in the report):
+1. LLM-judge metric (keep semantic similarity) → 2. circuit breaker → 3. `hybrid` profile → 4. `/requests` list page (keep the detail page)
+→ 4b. `hybrid` retrieval **mode** (keep dense + lexical fallback; the retrieval eval then compares dense vs lexical only)
+→ 5. GPU compose override → 6. `stream:false` mode on `/v1/chat`. **Never cut**: auth, quota, streaming, fallback + attempt recording, metering, refusal, eval on 2 configs, deploy.
+
+## Pre-flight (owner, manual, ~30 min)
+
+- [ ] GitHub repo `mini-inference-router` created (public or reviewer-accessible).
+- [ ] Gemini API key from AI Studio. In AI Studio confirm: `gemini-3.5-flash` and `gemini-3-flash-preview` available on the free tier, their RPM/RPD, and the embedding model ID. Test it:
+  `curl "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY" | grep -E '"name": "models/gemini-3'`
+- [ ] Neon project (Singapore, Postgres only). Pooled connection string saved.
+- [ ] Vercel account linked to GitHub.
+- [ ] Mac: Docker Desktop running with **≥ 8 GB memory**. Ollama up to date (`ollama --version`). Models: `gemma4:e2b-mlx` and `nomic-embed-text` (already on the Mac, confirm with `ollama list` and `ollama show gemma4:e2b-mlx`), plus `ollama pull gemma4:e2b-it-qat` to test the container model natively once.
+- [ ] **Two Google AI Studio projects**: `router-demo` (key for Vercel) and `router-eval` (key for local eval + embedding builds). Record the actual RPM/RPD of `gemini-3.5-flash`, `gemini-3-flash-preview` and the embedding model for each project in `docs/12` §3 and apply its decision rule.
+- [ ] Read `docs/12-free-tier-limits-and-risks.md` once end-to-end.
+- [ ] Python 3.10+ available for the one-off data prep.
+
+---
+
+## Phase 0: Repo bootstrap
+Read: `CLAUDE.md`, `docs/03` §8.
+- [ ] pnpm workspace: `apps/gateway`, `apps/console`, `packages/shared`. Root `tsconfig.base.json` (strict), ESLint (typescript-eslint, flat config), Prettier, Vitest config.
+- [ ] Root scripts from CLAUDE.md "Commands" (stubs allowed where later phases fill them in).
+- [ ] `.env.example` (doc 03 §8), `.gitignore` (node_modules, dist, .env*, keep `.env.example`), `.nvmrc` (22).
+- [ ] `packages/shared`: `intents.ts` (27 + `out_of_scope`), `sse.ts` (Zod schemas for every event in doc 03 §4), `api.ts` (request/response DTOs).
+- [ ] Minimal Hono app: `GET /healthz`, request-id middleware, error middleware, `AppError`, pino logger, env parsing with Zod. `src/index.ts` exports the app; `src/local.ts` serves it.
+**Verify:** `pnpm -r typecheck && pnpm -r lint && pnpm -r test` green; `pnpm --filter gateway dev` → `curl localhost:8787/healthz`.
+**Commit:** `chore: bootstrap monorepo`
+
+## Phase 1: Dataset split
+Read: `docs/02`.
+- [ ] `scripts/prepare_data.py` + `scripts/requirements.txt` exactly per spec. Run it.
+- [ ] Hand-write `data/eval_oos.jsonl` (5) and `data/dev_oos.jsonl` (15).
+- [ ] Commit `data/*.jsonl` + `split_manifest.json`.
+**Verify:** script assertions pass; counts 1350/270/27; no normalized overlap; print 3 sample eval rows.
+**Commit:** `feat(data): stratified KB/dev/eval split`
+
+## Phase 2: Database
+Read: `docs/03` §5, §6, §9.
+- [ ] Drizzle schema + migrations (incl. `CREATE EXTENSION vector` and `pg_trgm`, column `instruction_norm`, `requests.retrieval_mode`). Shared `normalize()` in `packages/shared` with tests matching the Python version. `pg` Pool client (lazy, `max: 3`, SSL when the URL demands it).
+- [ ] `docker-compose.yml` with just `postgres` for now (pgvector image).
+- [ ] `scripts/seed.ts`: idempotent tenants (doc 03 §9) with hashed keys; `--reset-usage`; prints generated keys once.
+- [ ] `scripts/embed_kb.ts`: providers `gemini` | `ollama`, batching + delay + resume, cache `.f32` + meta, `--from-cache-only`, upsert into `kb_entries`.
+- [ ] Embedding adapters `embeddings/gemini.ts`, `embeddings/ollama.ts` (normalize, task types/prefixes).
+**Verify:** `docker compose up -d postgres && pnpm db:migrate && pnpm db:seed && pnpm kb:embed -- --provider ollama` → 1350 rows for `nomic-embed-text`. A SQL top-5 query for "i want to cancel my order" returns cancel_order rows; `similarity(instruction_norm, 'i want to cancel my oorder')` ranks cancel_order rows highest.
+**Commit:** `feat(db): schema, seed, KB embeddings in pgvector`
+
+## Phase 3: Auth, quota, metering skeleton
+Read: `docs/03` §2–§7.
+- [ ] Middleware: body size limit (64 KB), JSON content-type, auth (Bearer / x-api-key → sha256 lookup), tenant on context.
+- [ ] `quota/reserve.ts` + `quota/reconcile.ts` (atomic SQL; fail closed → 503).
+- [ ] `metering/`: insert `requests` row at start (`in_progress`), record attempts, finalize; cost calc from `config/pricing.ts`.
+- [ ] `GET /v1/usage`, `GET /admin/usage`, `GET /admin/requests`, `GET /admin/requests/:id` (admin key).
+**Tests:** 401 missing/invalid; 403 disabled; 400 invalid body; 413; 415; quota exceeded → 429 + row; **DB down → 503 and no backend call**; concurrency (quota for N, 3N parallel → ≤ N succeed); reconcile math.
+**Commit:** `feat(gateway): auth, fail-closed quota, metering`
+
+## Phase 4: Backends + router
+Read: `docs/04`.
+- [ ] `backends/types.ts`, `mock.ts`, `ollama.ts`, `gemini.ts` (**verify SDK fields and model IDs first**; cite sources in comments), `registry.ts`, `config/profiles.ts`, `config/pricing.ts`.
+- [ ] `router/plan.ts` (pure) and `router/execute.ts` (fallback loop, TTFT/total timers, commit point, abort propagation, attempt recording).
+- [ ] Ollama boot check + warm-up. `/healthz` shows backend reachability (cheap checks only; no LLM calls on health).
+**Tests:** all of doc 04 §8 with fake backends and fake timers. Opt-in `LIVE=1` smoke for Gemini and Ollama.
+**Commit:** `feat(router): backends, routing rules, fallback with recorded attempts`
+
+## Phase 5: `/v1/chat` streaming
+Read: `docs/03` §3–§4.
+- [ ] `http/sse.ts` helper on Hono `streamSSE` (typed events, heartbeat, abort handling, anti-buffering headers per doc 12 §1). Metering is finalized before `done`; the abort path uses `waitUntil` when running on Vercel.
+- [ ] `routes/chat.ts`: validate → reserve → plan → execute → stream `token`/`tool_call` → reconcile → `done`. `stream:false` variant.
+- [ ] Debug overrides honoured only for `allow_debug` tenants.
+**Verify:** `curl -N` against local with Ollama: tokens arrive incrementally; force-fail ollama → mock serves; DB rows correct.
+**Tests:** event order contract; mid-stream failure → `error` + `done(partial_error)`; client abort → upstream aborted + `client_aborted`.
+**Commit:** `feat(chat): streaming chat endpoint`
+
+## Phase 6: Support assistant
+Read: `docs/05`.
+- [ ] `assistant/retrieve.ts` with modes `dense` | `hybrid` (RRF SQL, doc 05 §2.4) | `lexical_fallback` (on embedding failure or `debug.force_embedding_fail`); ranking separated from gating (doc 05 §2.1).
+- [ ] `intent.ts`, `prompt.ts` (PROMPT_V1), `parse.ts`, `confidence.ts`, `answer.ts` (orchestration incl. escalation), `routes/support.ts`.
+- [ ] `scripts/calibrate.ts` → `data/thresholds.json` with dense `T_oos`/`T_high` per embedding model + `T_trgm_oos` (run for `nomic-embed-text` now; Gemini in Phase 9).
+**Tests:** doc 05 §9 (normalize, retrieve incl. hybrid/gating/lexical fallback, parser fixtures, confidence table, route tests).
+**Verify:** 5 console-free curl runs: in-domain easy, typo, confusable, OOS (pre-gate refusal, 0 LLM calls), injection.
+**Commit:** `feat(assistant): RAG support answer with intent, confidence, refusal`
+**→ End of Day 1 checkpoint: show the owner a full curl transcript and the DB rows.**
+
+## Phase 7: Console
+Read: `docs/06`.
+- [ ] Vue app scaffold, Tailwind, router, `lib/sse.ts`, shared schemas.
+- [ ] Playground + inspector; Usage page; Request detail page (+ list if time).
+**Verify:** manual run-through of every inspector section with Ollama and with forced failures; screenshot to `docs/img/`.
+**Commit:** `feat(console): playground, usage, request inspector`
+
+## Phase 8: Evaluation
+Read: `docs/07`.
+- [ ] `scripts/eval-retrieval.ts` (doc 07 §2b): dense vs hybrid vs lexical over 297 + 20 queries with nomic. **Apply the decision rule and set the `RETRIEVAL_MODE` default**; record the result for the report.
+- [ ] `scripts/eval.ts`, `scripts/eval-compare.ts`, shared SSE parser reuse.
+- [ ] Run config B (`local-ollama`) now. Config A runs after Phase 9 (needs Gemini embeddings and thresholds).
+**Commit:** `feat(eval): end-to-end eval runner and comparison`
+
+## Phase 9: Cloud profile + deploy
+Read: `docs/08` §2–§3.
+- [ ] Neon: migrate, seed, `kb:embed --provider gemini`, calibrate (cloud). Commit caches and thresholds.
+- [ ] Vercel gateway + console projects, env vars, `sin1`, CORS, `maxDuration: 120`, Deployment Protection off for production. `scripts/smoke.sh`.
+- [ ] Run eval config A (against the deployed or a local cloud-profile gateway; record which) → `eval:compare` → `eval/report.md`.
+**Verify:** `smoke.sh` all PASS against prod. SSE streams incrementally on prod (`curl -N`). The production URL opens in a private window without a Vercel login. Neon wakes from scale-to-zero and the first request still succeeds.
+**Commit:** `feat(deploy): cloud profile on Vercel + Neon, eval results`
+
+## Phase 10: Docker full stack
+Read: `docs/08` §1.
+- [ ] Dockerfiles (gateway multi-stage with `tools` + `runtime` targets; console nginx), `migrate` one-shot, `ollama` + `ollama-pull` profile, `docker-compose.gpu.yml`.
+**Verify:** from a clean clone: `docker compose --profile ollama up --build` → console at :5173 answers (after model pull). Mode B works with host Ollama.
+**Commit:** `feat(docker): one-command local stack`
+
+## Phase 11: Report + README
+Read: `docs/10`.
+- [ ] `docs/REPORT.md` from the template with real numbers; "What I cut" complete; trade-offs honest.
+- [ ] `README.md`: what it is, live URLs + demo keys, 3 ways to run, architecture diagram, API examples (curl), eval summary table, link to the report and video, dataset license.
+**Commit:** `docs: technical report and README`
+
+## Phase 12: Video + submit
+- [ ] Record per the script in `docs/10`. Upload (YouTube unlisted / Loom / Drive). Link in README.
+- [ ] `db:seed --reset-usage` on Neon. Final `smoke.sh` PASS. Tag `v1.0.0`.
+- [ ] Reply to the recruiter's email with repo, URL, report link and video link (draft in `docs/10`).
