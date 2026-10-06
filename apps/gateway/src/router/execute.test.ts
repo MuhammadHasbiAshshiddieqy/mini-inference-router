@@ -275,6 +275,41 @@ describe("execute", () => {
     });
   });
 
+  it("an attempt that ends without provider usage after streaming content is metered with an estimate", async () => {
+    const client = new AbortController();
+    // Like Ollama: content streams, usage would only come in the final chunk, which never arrives.
+    const r = run(
+      {
+        "gemini-3.5-flash": fake([
+          { wait: 10, text: "x".repeat(80) },
+          { wait: 10_000, usage: [99, 99, 0] },
+        ]),
+      },
+      { clientSignal: client.signal },
+    );
+    await vi.advanceTimersByTimeAsync(50);
+    client.abort();
+    await vi.advanceTimersByTimeAsync(10);
+    const result = await r.promise;
+    expect(result.attempts[0]?.usage).toEqual({
+      type: "usage",
+      promptTokens: 1,
+      completionTokens: 20,
+      thinkingTokens: 0,
+      estimated: true,
+    });
+    expect(totals(result.attempts)).toMatchObject({ totalTokens: 21, estimated: true });
+  });
+
+  it("a failure before any content is not given an invented token count", async () => {
+    const r = run({
+      "gemini-3.5-flash": fake([{ fail: new BackendError("rate_limited", "429") }]),
+      "gemini-3-flash": ok(),
+    });
+    await vi.runAllTimersAsync();
+    expect((await r.promise).attempts[0]?.usage).toBeUndefined();
+  });
+
   it("onAttemptDone sees every attempt, and attempt numbering can continue after escalation", async () => {
     const done: string[] = [];
     const r = run(

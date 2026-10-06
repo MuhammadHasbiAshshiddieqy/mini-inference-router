@@ -9,6 +9,7 @@ import { errorHandler, notFoundHandler } from "./http/error-handler.ts";
 import { requestContext } from "./http/request-id.ts";
 import type { AppEnv } from "./http/types.ts";
 import { adminRoutes } from "./routes/admin.ts";
+import { chatRoutes } from "./routes/chat.ts";
 import { healthRoutes, type OllamaProbe } from "./routes/health.ts";
 import { usageRoutes } from "./routes/usage.ts";
 
@@ -18,6 +19,8 @@ export type AppDeps = {
   getPool: () => Pool; // lazy: the pool is created on first use
   registry?: BackendRegistry; // defaults to the active profile's backends from env
   probeOllama?: OllamaProbe; // injectable for tests
+  waitUntil?: (promise: Promise<unknown>) => void; // Vercel: keep metering writes alive after the response
+  heartbeatMs?: number; // SSE heartbeat interval (tests use a short one)
 };
 
 // Builds the Hono app. Kept separate from index.ts (Vercel entry) and local.ts (Node server) so tests
@@ -25,7 +28,15 @@ export type AppDeps = {
 //
 // Order on /v1/*: request id → body size (413) → JSON content type (415) → tenant auth (401/403/503)
 // → route: body validation + policy (400/403) → quota reservation (429/503) → work → metering.
-export function createApp({ env, logger, getPool, registry = createBackendRegistry(env), probeOllama }: AppDeps) {
+export function createApp({
+  env,
+  logger,
+  getPool,
+  registry = createBackendRegistry(env),
+  probeOllama,
+  waitUntil,
+  heartbeatMs,
+}: AppDeps) {
   const app = new Hono<AppEnv>();
   app.use(requestContext(logger));
   app.onError(errorHandler);
@@ -35,6 +46,16 @@ export function createApp({ env, logger, getPool, registry = createBackendRegist
 
   app.use("/v1/*", limitBody, requireJson, tenantAuth(getPool));
   app.route("/v1", usageRoutes(getPool));
+  app.route(
+    "/v1",
+    chatRoutes({
+      env,
+      getPool,
+      registry,
+      ...(waitUntil ? { waitUntil } : {}),
+      ...(heartbeatMs ? { heartbeatMs } : {}),
+    }),
+  );
 
   app.use("/admin/*", adminAuth(env.ADMIN_API_KEY));
   app.route("/admin", adminRoutes(getPool));

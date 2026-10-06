@@ -78,6 +78,7 @@ Owner only (accounts and keys; Claude cannot do these):
 - [x] `scripts/seed.ts`: idempotent tenants `acme`, `globex`, `tiny`, `eval`, `reviewer`; hashed keys + prefix; `--reset-usage`; print generated keys once
 - [x] `embeddings/gemini.ts` (768-d, task types, L2-normalize) and `embeddings/ollama.ts` (prefixes, L2-normalize)
 - [x] `scripts/embed_kb.ts`: `--provider gemini|ollama`, batching + delay + resume, cache `data/embeddings/<model>.f32` + `.meta.json` (sha256 of kb.jsonl), `--from-cache-only`, upsert
+- [ ] Phase 9: `waitUntil` for the final metering write when the client disconnects on Vercel (hook `waitUntil` already in `createApp` deps; on Node the handler keeps running, verified)
 - [ ] Phase 9: call `attachDatabasePool(pool)` (`@vercel/functions`) when running on Vercel; needs a docs/11 row
 - [x] Gemini embedder verified live (768 dims, batch of 3, sim(query, cancel)=0.736 vs OOS 0.506); embedding model id settled
 - [ ] `pnpm kb:embed -- --provider gemini` (≈27 batch calls) — waiting for owner: confirm the key is from `router-eval`
@@ -102,9 +103,9 @@ Owner only (accounts and keys; Claude cannot do these):
 - **Commit:** `feat(router): backends, routing rules, fallback with recorded attempts`
 
 ## Phase 5 — `/v1/chat` streaming (docs/03 §3–4)
-- [ ] `http/sse.ts` on Hono `streamSSE`: typed events, 10 s heartbeat, anti-buffering headers, no compression, metering before `done`, `waitUntil` on abort
-- [ ] `routes/chat.ts`: validate → reserve → plan → execute → `token` / `tool_call` → reconcile → `done`; `stream:false` variant
-- [ ] Debug overrides only for `allow_debug` tenants (else 403 `debug_not_allowed`)
+- [x] `http/sse.ts` on Hono `streamSSE`: typed events, 10 s heartbeat, anti-buffering headers, no compression, metering before `done`, `waitUntil` on abort
+- [x] `routes/chat.ts`: validate → reserve → plan → execute → `token` / `tool_call` → reconcile → `done`; `stream:false` variant
+- [x] Debug overrides only for `allow_debug` tenants (else 403 `debug_not_allowed`)
 - **Verify:** `curl -N` with Ollama streams incrementally; force-fail ollama → mock; DB rows correct
 - **Tests:** event order; mid-stream failure → `error` + `done(partial_error)`; client abort → upstream aborted + `client_aborted`
 - **Commit:** `feat(chat): streaming chat endpoint`

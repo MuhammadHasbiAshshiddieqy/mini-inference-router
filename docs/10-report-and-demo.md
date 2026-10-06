@@ -40,7 +40,7 @@ Diagram (from docs/03) + 5 bullets on the request path: auth → fail-closed quo
 - Notable failure cases (2–3 examples).
 
 ## 7. Measurement accuracy
-Where tokens come from (provider usage vs estimated for mock), thinking tokens billed as output, list-price-equivalent cost on the free tier, latency measured server-side (TTFT, total) and client-side in eval.
+Where tokens come from (provider usage vs estimated for mock; an attempt that ends without the provider's usage after streaming content, e.g. an aborted Ollama stream whose usage only arrives in the final chunk, is metered as an estimate and flagged `tokens_estimated`, never as 0), thinking tokens billed as output, list-price-equivalent cost on the free tier, latency measured server-side (TTFT, total) and client-side in eval.
 
 ## 8. What I cut (and why)
 (table from Part B)

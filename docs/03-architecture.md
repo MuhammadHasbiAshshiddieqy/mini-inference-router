@@ -103,7 +103,11 @@ Format: `event: <name>\ndata: <json>\n\n`. Send a heartbeat comment `: ping` eve
 | `error` | `{ code, message }` | mid-stream failure (after first token) |
 | `done` | `{ outcome, served_by:{backend_id,model}\|null, fallback_fired, escalated, usage:{prompt_tokens,completion_tokens,thinking_tokens,total_tokens,estimated}, latency_ms, ttft_ms, cost_usd, quota:{limit,used,remaining}, decisions:string[] }` (`decisions` = routing exclusions from `router/plan.ts`, doc 04 §4) | always last |
 
-`stream:false` returns one JSON object containing the union of these fields (`answer` = concatenated tokens).
+`stream:false` returns one JSON object containing the union of these fields (`answer` = concatenated tokens; for chat also `tool_calls`, `attempts` and `decisions`). Because nothing reaches the client before the end, JSON mode never commits: a mid-generation failure still falls back, and the failed attempt's partial text is discarded.
+
+SSE response headers: `Content-Type: text/event-stream; charset=utf-8`, `Cache-Control: no-cache, no-transform`, `X-Accel-Buffering: no`, `Connection: keep-alive`. Every event is validated against the shared Zod schema before it is written.
+
+Routing plan errors (403 `no_allowed_backend`, 422 `tools_unsupported`) are checked during admission, **before** the quota reservation, so they never hold tokens; they are metered like validation errors (`invalid_request` row with the specific `error_code`).
 
 ## 5. Quota design (token budget with reservation)
 
@@ -212,7 +216,8 @@ Outcomes (`requests.outcome`): `ok`, `ok_after_fallback`, `refused`, `quota_exce
 | 415 | `unsupported_media_type` | not JSON |
 | 422 | `tools_unsupported` | tools requested but no allowed backend supports tools |
 | 429 | `quota_exceeded` | quota (includes limit/used/remaining) |
-| 502 | `all_backends_failed` | every candidate failed before the first token (details list attempts) |
+| 502 | `all_backends_failed` | every candidate failed before the first token (details list attempts). JSON mode only; with SSE the stream is already open, so it is an `error` + `done` event pair |
+| — | `mid_stream_error` | SSE `error` event only: the serving backend failed after content was sent; no retry, `done.outcome = partial_error` |
 | 503 | `quota_unavailable` | DB unreachable during reservation (fail closed) |
 | 503 | `embedding_unavailable` | query embedding failed **and** lexical fallback is disabled (`RETRIEVAL_LEXICAL_FALLBACK=false`); normally the request degrades to `lexical_fallback` instead |
 | 500 | `internal_error` | anything else (logged with stack, generic message to client) |

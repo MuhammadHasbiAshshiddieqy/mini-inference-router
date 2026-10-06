@@ -62,6 +62,7 @@ export const ERROR_CODES = [
   "tools_unsupported",
   "quota_exceeded",
   "all_backends_failed",
+  "mid_stream_error", // SSE only: the backend failed after content was sent (no retry)
   "quota_unavailable",
   "embedding_unavailable",
   "internal_error",

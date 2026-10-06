@@ -122,3 +122,5 @@ export function parseSseEvent(name: string, data: unknown): ParsedSseEvent {
   if (!result.success) return { ok: false, reason: "invalid_data", name, issues: result.error.issues };
   return { ok: true, event: { event: name, data: result.data } as SseEvent };
 }
+
+export type DoneEvent = z.infer<typeof DoneEventSchema>;

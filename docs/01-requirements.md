@@ -82,7 +82,7 @@ Priority: **P0** = must ship. **P1** = should ship. **P2** = only if time remain
 
 | ID | Requirement | Pri | Where implemented | Evidence |
 |---|---|---|---|---|
-| R1 | Chat endpoint with streaming (SSE) | P0 | `routes/chat.ts`, `http/sse.ts` | test `chat.stream.test.ts`, console playground, video |
+| R1 | Chat endpoint with streaming (SSE) | P0 | `routes/chat.ts`, `http/sse.ts`, shared `sse-parser.ts` | `routes/chat.test.ts` (event order, headers, heartbeat, fallback, partial_error, client abort, JSON mode), `curl -N` transcript, console playground, video |
 | R2 | Per-tenant API key auth | P0 | `http/auth.ts` (hashed keys in `tenants`) | `request-path.test.ts`: missing/invalid key → 401, disabled → 403 |
 | R3 | Per-tenant quota, fails closed, clear error | P0 | `quota/quota.ts` (atomic reserve + reconcile), `http/admission.ts` | `request-path.test.ts`: exhausted → 429 `quota_exceeded`; DB down → 503 `quota_unavailable`, no backend call; concurrency (3N parallel → exactly N admitted) |
 | R4 | Tenant policy: "enforces what each tenant is allowed" | P0 | `tenants.allowed_backends`, `max_output_tokens` | test: disallowed backend never attempted |

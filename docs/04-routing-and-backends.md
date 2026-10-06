@@ -148,6 +148,7 @@ Notes:
   - A failure after commit is recorded as attempt status `mid_stream_error` (`error_detail` = underlying status + message) and the run ends with `partial_error`.
   - A consumer may stop the run with a non-retryable `BackendError` (e.g. `invalid_output`): this is a **quality** signal for escalation (§6), so there is no fallback; the run ends `stopped`.
   - `fallbackFired` = more than one attempt in the run (the loop only advances after a failure).
+  - Usage of an attempt that ends without a provider usage chunk after content was streamed (abort, timeout, mid-stream error) is **estimated** (prompt chars/4 + streamed chars/4, `estimated: true`) instead of recorded as 0. Found on a real `curl` abort against Ollama, which reports usage only in its final chunk. Attempts that fail before any content get no invented count.
 - Mock timeouts are fixed (TTFT 10 s, total 30 s) because its latency is per request (`debug.mock_latency_ms` up to 20 s): a mock latency above 10 s demonstrates a TTFT timeout.
 - `supportsTools` for Gemini is derived from the model id (major version ≥ 3), so pointing `GEMINI_*_MODEL` at a 2.x model can never enable tools.
 

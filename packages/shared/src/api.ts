@@ -100,6 +100,19 @@ export const ChatResponseSchema = z.object({
   ...responseMetrics,
   answer: z.string(),
   tool_calls: z.array(z.object({ name: z.string(), arguments: z.unknown() })),
+  // The same routing record the SSE stream carries in route / attempt_failed / done events.
+  attempts: z.array(
+    z.object({
+      attempt: z.number().int().positive(),
+      backend_id: z.string(),
+      model: z.string(),
+      reason: z.string(),
+      status: AttemptStatusSchema,
+      error: z.string().nullable(),
+      latency_ms: z.number().int().nonnegative(),
+    }),
+  ),
+  decisions: z.array(z.string()),
 });
 export type ChatResponse = z.infer<typeof ChatResponseSchema>;
 

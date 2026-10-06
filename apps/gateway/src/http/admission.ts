@@ -43,6 +43,9 @@ export type AdmitOptions<T extends BaseBody> = {
   schema: z.ZodType<T>;
   // Prompt-size estimate for the reservation (e.g. messages, or message + KB context for support).
   estimatePromptTokens: (body: T) => number;
+  // Route-specific checks that need the parsed body and tenant (e.g. routing plan: 403 no_allowed_backend,
+  // 422 tools_unsupported). Runs before the reservation; a thrown AppError is metered like a validation error.
+  precheck?: (body: T, tenant: Tenant) => void;
 };
 
 function invalid(message: string, details?: unknown): AppError {
@@ -63,6 +66,7 @@ export async function admit<T extends BaseBody>(c: Context<AppEnv>, opts: AdmitO
   let body: T;
   try {
     body = await parseBody(c, opts.schema, tenant);
+    opts.precheck?.(body, tenant);
   } catch (err) {
     if (err instanceof AppError) await recordRejectedRequest(opts.db, log, start, "invalid_request", err.code);
     throw err;
@@ -100,17 +104,18 @@ export async function settle<T>(
   c: Context<AppEnv>,
   admission: Admission<T>,
   final: Omit<RequestFinal, "latencyMs">,
-): Promise<QuotaState> {
+): Promise<{ quota: QuotaState; latencyMs: number }> {
   const log = c.get("logger");
-  const quota = await reconcileTokens(db, log, admission.tenant.id, admission.reservedTokens, final.totalTokens);
   const latencyMs = Math.round(performance.now() - admission.startedAt);
+  const quota = await reconcileTokens(db, log, admission.tenant.id, admission.reservedTokens, final.totalTokens);
   try {
     await finalizeRequest(db, admission.start.id, { ...final, latencyMs });
   } catch (err) {
     log.error({ err, outcome: final.outcome }, "failed to finalize request row");
   }
+  log.info({ outcome: final.outcome, total_tokens: final.totalTokens, latency_ms: latencyMs }, "settled");
   // If reconcile failed the reservation is kept; report the last known state conservatively.
-  return quota ?? admission.quota;
+  return { quota: quota ?? admission.quota, latencyMs };
 }
 
 async function parseBody<T extends BaseBody>(c: Context<AppEnv>, schema: z.ZodType<T>, tenant: Tenant): Promise<T> {

@@ -44,7 +44,7 @@ function buildApp(opts: BuildOptions = {}) {
     });
     backend.calls++;
     const totalTokens = opts.holdReservation ? admission.reservedTokens : 42;
-    const quota = await settle(queryable, c, admission, {
+    const { quota } = await settle(queryable, c, admission, {
       outcome: "ok",
       servedBackendId: "mock",
       servedModel: "mock",

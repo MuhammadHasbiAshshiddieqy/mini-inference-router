@@ -82,9 +82,9 @@ Read: `docs/04`.
 
 ## Phase 5: `/v1/chat` streaming
 Read: `docs/03` §3–§4.
-- [ ] `http/sse.ts` helper on Hono `streamSSE` (typed events, heartbeat, abort handling, anti-buffering headers per doc 12 §1). Metering is finalized before `done`; the abort path uses `waitUntil` when running on Vercel.
-- [ ] `routes/chat.ts`: validate → reserve → plan → execute → stream `token`/`tool_call` → reconcile → `done`. `stream:false` variant.
-- [ ] Debug overrides honoured only for `allow_debug` tenants.
+- [x] `http/sse.ts` helper on Hono `streamSSE` (typed events, heartbeat, abort handling, anti-buffering headers per doc 12 §1). Metering is finalized before `done`; the abort path uses `waitUntil` when running on Vercel.
+- [x] `routes/chat.ts`: validate → reserve → plan → execute → stream `token`/`tool_call` → reconcile → `done`. `stream:false` variant.
+- [x] Debug overrides honoured only for `allow_debug` tenants.
 **Verify:** `curl -N` against local with Ollama: tokens arrive incrementally; force-fail ollama → mock serves; DB rows correct.
 **Tests:** event order contract; mid-stream failure → `error` + `done(partial_error)`; client abort → upstream aborted + `client_aborted`.
 **Commit:** `feat(chat): streaming chat endpoint`

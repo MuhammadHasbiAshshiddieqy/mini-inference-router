@@ -2,6 +2,7 @@ import type { AttemptStatus } from "@mir/shared";
 import type { Logger } from "pino";
 import {
   BackendError,
+  estimateTokenCount,
   type Backend,
   type BackendSpec,
   type GenerateRequest,
@@ -114,6 +115,7 @@ export async function execute(input: ExecuteInput): Promise<ExecuteResult> {
   const firstNo = input.firstAttemptNo ?? 1;
   let committed = false;
   let prevStatus: AttemptStatus | undefined;
+  const promptText = [input.request.system ?? "", ...input.request.messages.map((m) => m.content)].join("\n");
 
   const finish = (
     outcome: ExecuteOutcome,
@@ -184,7 +186,22 @@ export async function execute(input: ExecuteInput): Promise<ExecuteResult> {
     let consumerStop: BackendError | undefined; // quality signal from the consumer: stop, no fallback
     let consumerFailure: unknown; // unexpected throw from the consumer: a bug, surfaced to the route
     let iterator: AsyncIterator<StreamChunk> | undefined;
-    const attemptCost = () => costUsd(spec.price, usage ?? { promptTokens: 0, completionTokens: 0, thinkingTokens: 0 });
+    let streamedChars = 0;
+    // Some providers (Ollama) report usage only in the final chunk. If an attempt ends without it after
+    // content was generated (abort, timeout, mid-stream error), record an estimate instead of a false zero.
+    const effectiveUsage = (): UsageChunk | undefined =>
+      usage ??
+      (streamedChars > 0
+        ? {
+            type: "usage",
+            promptTokens: estimateTokenCount(promptText),
+            completionTokens: Math.ceil(streamedChars / 4),
+            thinkingTokens: 0,
+            estimated: true,
+          }
+        : undefined);
+    const attemptCost = () =>
+      costUsd(spec.price, effectiveUsage() ?? { promptTokens: 0, completionTokens: 0, thinkingTokens: 0 });
 
     try {
       const stream = input.backendFor(spec).stream({ ...input.request, signal: controller.signal });
@@ -201,6 +218,7 @@ export async function execute(input: ExecuteInput): Promise<ExecuteResult> {
           firstContentAt = now();
           clearTimeout(ttftTimer);
         }
+        streamedChars += chunk.type === "text" ? chunk.text.length : JSON.stringify(chunk.arguments ?? null).length;
         try {
           await input.hooks.onChunk(chunk, { commit: () => (committed = true), backend: spec });
         } catch (err) {
@@ -215,7 +233,7 @@ export async function execute(input: ExecuteInput): Promise<ExecuteResult> {
         ...base,
         status: "ok",
         errorDetail: null,
-        usage,
+        usage: effectiveUsage(),
         costUsd: attemptCost(),
         latencyMs: Math.round(now() - t0),
         ttftMs: firstContentAt === null ? null : Math.round(firstContentAt - t0),
@@ -229,7 +247,7 @@ export async function execute(input: ExecuteInput): Promise<ExecuteResult> {
         ...base,
         status,
         errorDetail,
-        usage,
+        usage: effectiveUsage(),
         costUsd: attemptCost(),
         latencyMs,
         ttftMs,
