@@ -24,7 +24,7 @@ run the verification, tick the boxes below, commit, and **stop** with a short su
 ## Pre-flight (owner, manual, ~30 min)
 
 - [x] GitHub repo `mini-inference-router` created (public or reviewer-accessible). *(public, checked 2026-10-06)*
-- [ ] Gemini API key from AI Studio. In AI Studio confirm: `gemini-3.5-flash` and `gemini-3-flash-preview` available on the free tier, their RPM/RPD, and the embedding model ID. Test it:
+- [ ] Gemini API key from AI Studio. *(2026-10-06: key works; `models.list` confirms `gemini-3.5-flash`, `gemini-3-flash-preview`, `gemini-embedding-001`. RPM/RPD still to record.)* In AI Studio confirm: `gemini-3.5-flash` and `gemini-3-flash-preview` available on the free tier, their RPM/RPD, and the embedding model ID. Test it:
   `curl "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY" | grep -E '"name": "models/gemini-3'`
 - [ ] Neon project (Singapore, Postgres only). Pooled connection string saved.
 - [ ] Vercel account linked to GitHub.

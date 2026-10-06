@@ -30,7 +30,7 @@ Done by Claude (2026-10-06):
 
 Owner only (accounts and keys; Claude cannot do these):
 - [ ] Two Google AI Studio projects: `router-demo` (Vercel) and `router-eval` (eval + embedding builds); put the eval key in `.env` as `GEMINI_API_KEY`
-- [ ] Confirm in AI Studio that `gemini-3.5-flash`, `gemini-3-flash-preview` and the embedding model are on the free tier (docs confirm the chat IDs; embedding id is ambiguous: `gemini-embedding-001` vs `gemini-embedding-2` → decide in Phase 2)
+- [x] Gemini key in `.env` works; `models.list` shows `gemini-3.5-flash`, `gemini-3-flash-preview`, `gemini-embedding-001` (2026-10-06). Embedding model decided: `gemini-embedding-001` (`gemini-embedding-2` returns one vector per batch)
 - [ ] Record actual RPM / RPD per model per project in `docs/12` §3; apply the decision rule (RPD < 200 → smaller SPA quotas, eval only on eval project, record video right after 14:00 WIB reset)
 - [ ] Neon project (Singapore, Postgres only), pooled connection string saved (needed by Phase 9; local Docker Postgres covers Phases 2–8)
 - [ ] Vercel account linked to GitHub (needed by Phase 9)
@@ -79,7 +79,8 @@ Owner only (accounts and keys; Claude cannot do these):
 - [x] `embeddings/gemini.ts` (768-d, task types, L2-normalize) and `embeddings/ollama.ts` (prefixes, L2-normalize)
 - [x] `scripts/embed_kb.ts`: `--provider gemini|ollama`, batching + delay + resume, cache `data/embeddings/<model>.f32` + `.meta.json` (sha256 of kb.jsonl), `--from-cache-only`, upsert
 - [ ] Phase 9: call `attachDatabasePool(pool)` (`@vercel/functions`) when running on Vercel; needs a docs/11 row
-- [ ] Gemini embedder is unit-tested with a fake client only; run `pnpm kb:embed -- --provider gemini` once a key exists (also settles the embedding model id)
+- [x] Gemini embedder verified live (768 dims, batch of 3, sim(query, cancel)=0.736 vs OOS 0.506); embedding model id settled
+- [ ] `pnpm kb:embed -- --provider gemini` (≈27 batch calls) — waiting for owner: confirm the key is from `router-eval`
 - **Verify:** 1350 rows for `nomic-embed-text`; top-5 for "i want to cancel my order" = cancel_order; trigram on "cancel my oorder" ranks cancel_order highest
 - **Commit:** `feat(db): schema, seed, KB embeddings in pgvector`
 

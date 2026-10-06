@@ -31,8 +31,9 @@ const EnvSchema = z.object({
   GEMINI_PRIMARY_MODEL: z.string().default("gemini-3.5-flash"),
   GEMINI_FALLBACK_MODEL: z.string().default("gemini-3-flash-preview"),
   GEMINI_THINKING_LEVEL: z.enum(["minimal", "low", "medium", "high"]).default("minimal"),
-  // source: https://ai.google.dev/gemini-api/docs/models, checked 2026-10-06. The embeddings page now names
-  // gemini-embedding-2; the final embedding model is decided in Phase 2.
+  // gemini-embedding-001, verified 2026-10-06 with a live call: taskType + 768 dims + one vector per text in a
+  // batch. gemini-embedding-2 returned ONE vector for a 3-text batch (it treats the array as one multimodal
+  // content), so it does not fit the batch KB build. Source: models.list + https://ai.google.dev/gemini-api/docs/embeddings
   GEMINI_EMBED_MODEL: z.string().default("gemini-embedding-001"),
   GEMINI_TTFT_TIMEOUT_MS: positiveInt.default(8000),
   GEMINI_TOTAL_TIMEOUT_MS: positiveInt.default(30_000),
