@@ -4,6 +4,6 @@ import { defineConfig } from "vitest/config";
 // `pnpm -r test` runs each package's own `vitest run` instead.
 export default defineConfig({
   test: {
-    projects: ["packages/*", "apps/gateway"],
+    projects: ["packages/*", "apps/gateway", "scripts"],
   },
 });

@@ -22,6 +22,9 @@ const EnvSchema = z.object({
         .filter(Boolean),
     ),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
+  // Connect + query timeout. ≥ 5 s so the first query survives a Neon scale-to-zero wake-up (docs/12 §2).
+  DB_TIMEOUT_MS: positiveInt.default(8000),
+  EMBED_TIMEOUT_MS: positiveInt.default(10_000),
 
   GEMINI_API_KEY: z.string().optional(),
   // source: https://ai.google.dev/gemini-api/docs/models, checked 2026-10-06 (gemini-3.5-flash stable, gemini-3-flash-preview preview)

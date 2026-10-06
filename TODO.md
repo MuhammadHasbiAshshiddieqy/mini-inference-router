@@ -71,13 +71,15 @@ Owner only (accounts and keys; Claude cannot do these):
 - **Commit:** `feat(data): stratified KB/dev/eval split`
 
 ## Phase 2 — Database (docs/03 §5–6, §9)
-- [ ] Drizzle schema + migrations: `tenants`, `requests`, `route_attempts`, `kb_entries` (`instruction_norm`, `vector(768)`), extensions `vector` + `pg_trgm`
-- [ ] `packages/shared/src/normalize.ts` + tests on the same fixtures as the Python version
-- [ ] `db/client.ts`: lazy `pg.Pool({ max: 3, idleTimeoutMillis: 5000 })`, SSL when required
-- [ ] `docker-compose.yml` with `postgres` only (`pgvector/pgvector:pg16`)
-- [ ] `scripts/seed.ts`: idempotent tenants `acme`, `globex`, `tiny`, `eval`, `reviewer`; hashed keys + prefix; `--reset-usage`; print generated keys once
-- [ ] `embeddings/gemini.ts` (768-d, task types, L2-normalize) and `embeddings/ollama.ts` (prefixes, L2-normalize)
-- [ ] `scripts/embed_kb.ts`: `--provider gemini|ollama`, batching + delay + resume, cache `data/embeddings/<model>.f32` + `.meta.json` (sha256 of kb.jsonl), `--from-cache-only`, upsert
+- [x] Drizzle schema + migrations: `tenants`, `requests`, `route_attempts`, `kb_entries` (`instruction_norm`, `vector(768)`), extensions `vector` + `pg_trgm`
+- [x] `packages/shared/src/normalize.ts` + tests on the same fixtures as the Python version
+- [x] `db/client.ts`: lazy `pg.Pool({ max: 3, idleTimeoutMillis: 5000 })`, SSL when required
+- [x] `docker-compose.yml` with `postgres` only (`pgvector/pgvector:pg16`)
+- [x] `scripts/seed.ts`: idempotent tenants `acme`, `globex`, `tiny`, `eval`, `reviewer`; hashed keys + prefix; `--reset-usage`; print generated keys once
+- [x] `embeddings/gemini.ts` (768-d, task types, L2-normalize) and `embeddings/ollama.ts` (prefixes, L2-normalize)
+- [x] `scripts/embed_kb.ts`: `--provider gemini|ollama`, batching + delay + resume, cache `data/embeddings/<model>.f32` + `.meta.json` (sha256 of kb.jsonl), `--from-cache-only`, upsert
+- [ ] Phase 9: call `attachDatabasePool(pool)` (`@vercel/functions`) when running on Vercel; needs a docs/11 row
+- [ ] Gemini embedder is unit-tested with a fake client only; run `pnpm kb:embed -- --provider gemini` once a key exists (also settles the embedding model id)
 - **Verify:** 1350 rows for `nomic-embed-text`; top-5 for "i want to cancel my order" = cancel_order; trigram on "cancel my oorder" ranks cancel_order highest
 - **Commit:** `feat(db): schema, seed, KB embeddings in pgvector`
 

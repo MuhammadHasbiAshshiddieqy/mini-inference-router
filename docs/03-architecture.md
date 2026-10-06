@@ -225,6 +225,8 @@ DATABASE_URL=postgres://postgres:postgres@localhost:5432/router
 ADMIN_API_KEY=change-me
 CORS_ORIGINS=http://localhost:5173
 LOG_LEVEL=info
+DB_TIMEOUT_MS=8000                # connect + query timeout; >= 5 s so the first query survives a Neon wake-up
+EMBED_TIMEOUT_MS=10000            # per embedding call (KB build and query embedding)
 
 GEMINI_API_KEY=
 GEMINI_PRIMARY_MODEL=gemini-3.5-flash
@@ -276,6 +278,7 @@ Validate with Zod. `GEMINI_*` is required only when the active profile uses Gemi
 | `reviewer` | all | 500,000 | 1024 | yes | **private** key for the assessors, sent only in the submission email (doc 12 §6) |
 
 `db:seed` is idempotent (upsert by id). It has a `--reset-usage` flag to zero `used_tokens` before a demo.
+Keys: if `SEED_KEY_<TENANT>` is set, that key is hashed and stored (pin the same keys locally and on Neon). Otherwise a key is generated only for a tenant that does not exist yet and printed once; an existing tenant keeps its key, so re-seeding never rotates keys silently. The `eval` tenant is skipped when `PROFILE=cloud` unless `--with-eval` is passed.
 
 ## 10. Logging
 

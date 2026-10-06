@@ -1,0 +1,10 @@
+# Local stack (docs/08 §1). Phase 2: Postgres + pgvector only; gateway, console and Ollama services come in Phase 10.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: router }
+    ports: ["5432:5432"]
+    healthcheck: { test: ["CMD", "pg_isready", "-U", "postgres"], interval: 3s, retries: 20 }
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+volumes: { pgdata: {} }

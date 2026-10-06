@@ -7,6 +7,11 @@ export const PROFILES = ["cloud", "local", "hybrid"] as const;
 export const ProfileSchema = z.enum(PROFILES);
 export type Profile = z.infer<typeof ProfileSchema>;
 
+// Stable backend ids used in tenant policy and metering (docs/04 §3). Ids stay stable when model versions change.
+export const BACKEND_IDS = ["gemini-3.5-flash", "gemini-3-flash", "ollama", "mock"] as const;
+export const BackendIdSchema = z.enum(BACKEND_IDS);
+export type BackendId = z.infer<typeof BackendIdSchema>;
+
 export const ENDPOINTS = ["chat", "support"] as const;
 export const EndpointSchema = z.enum(ENDPOINTS);
 export type Endpoint = z.infer<typeof EndpointSchema>;

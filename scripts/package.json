@@ -1,0 +1,15 @@
+{
+  "name": "@mir/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mir/shared": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

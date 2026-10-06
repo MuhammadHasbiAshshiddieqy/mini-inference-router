@@ -110,6 +110,6 @@ The console renders `{{...}}` as a subtle chip so this is visibly intentional.
 - Text embedded per KB entry: `instruction` only (the user-side text). Retrieval matches user message to user message, which works better than matching against long responses. The response is returned as context.
 - Cloud model: Gemini embedding (verify current model ID, e.g. `gemini-embedding-001`), `outputDimensionality: 768`, `taskType` `RETRIEVAL_DOCUMENT` for KB and `RETRIEVAL_QUERY` for queries. **L2-normalize** vectors (required when dims < default).
 - Local model: `nomic-embed-text` (768-dim). Prefix with `search_document: ` for KB and `search_query: ` for queries. L2-normalize.
-- Cache embeddings in `data/embeddings/<model>.f32` (Float32 little-endian, row order = `kb.jsonl`) + `<model>.meta.json` (model, dims, count, sha256 of kb.jsonl). Commit both, so reviewers running locally on CPU skip the slow embedding step.
+- Cache embeddings in `data/embeddings/<model>.f32` (Float32 little-endian, row order = `kb.jsonl`) + `<model>.meta.json` (model, provider, dims, count, sha256 of kb.jsonl, `complete`). While building, `complete` is false and `count` is the number of rows already written, so an interrupted build resumes from there (a half-written batch is truncated). Commit both, so reviewers running locally on CPU skip the slow embedding step.
 - `pnpm kb:embed -- --provider gemini|ollama` (re)builds the cache if it is missing or stale, then upserts into pgvector.
 - Rate limits: embed in batches with a configurable delay, and resume from the cache on failure.

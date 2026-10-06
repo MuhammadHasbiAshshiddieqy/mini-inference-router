@@ -55,11 +55,11 @@ Read: `docs/02`.
 
 ## Phase 2: Database
 Read: `docs/03` §5, §6, §9.
-- [ ] Drizzle schema + migrations (incl. `CREATE EXTENSION vector` and `pg_trgm`, column `instruction_norm`, `requests.retrieval_mode`). Shared `normalize()` in `packages/shared` with tests matching the Python version. `pg` Pool client (lazy, `max: 3`, SSL when the URL demands it).
-- [ ] `docker-compose.yml` with just `postgres` for now (pgvector image).
-- [ ] `scripts/seed.ts`: idempotent tenants (doc 03 §9) with hashed keys; `--reset-usage`; prints generated keys once.
-- [ ] `scripts/embed_kb.ts`: providers `gemini` | `ollama`, batching + delay + resume, cache `.f32` + meta, `--from-cache-only`, upsert into `kb_entries`.
-- [ ] Embedding adapters `embeddings/gemini.ts`, `embeddings/ollama.ts` (normalize, task types/prefixes).
+- [x] Drizzle schema + migrations (incl. `CREATE EXTENSION vector` and `pg_trgm`, column `instruction_norm`, `requests.retrieval_mode`). Shared `normalize()` in `packages/shared` with tests matching the Python version. `pg` Pool client (lazy, `max: 3`, SSL when the URL demands it).
+- [x] `docker-compose.yml` with just `postgres` for now (pgvector image).
+- [x] `scripts/seed.ts`: idempotent tenants (doc 03 §9) with hashed keys; `--reset-usage`; prints generated keys once.
+- [x] `scripts/embed_kb.ts`: providers `gemini` | `ollama`, batching + delay + resume, cache `.f32` + meta, `--from-cache-only`, upsert into `kb_entries`.
+- [x] Embedding adapters `embeddings/gemini.ts`, `embeddings/ollama.ts` (normalize, task types/prefixes).
 **Verify:** `docker compose up -d postgres && pnpm db:migrate && pnpm db:seed && pnpm kb:embed -- --provider ollama` → 1350 rows for `nomic-embed-text`. A SQL top-5 query for "i want to cancel my order" returns cancel_order rows; `similarity(instruction_norm, 'i want to cancel my oorder')` ranks cancel_order rows highest.
 **Commit:** `feat(db): schema, seed, KB embeddings in pgvector`
 

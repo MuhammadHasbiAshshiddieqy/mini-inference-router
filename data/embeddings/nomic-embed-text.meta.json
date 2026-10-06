@@ -1,0 +1,9 @@
+{
+  "model": "nomic-embed-text",
+  "provider": "ollama",
+  "dims": 768,
+  "kb_sha256": "b31e15ee7c78eed027c67f812e3a039feb6d312ee61f75d30e8cd427acac3176",
+  "count": 1350,
+  "complete": true,
+  "updated_at": "2026-10-06T10:08:31.972Z"
+}
