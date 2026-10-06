@@ -115,12 +115,19 @@ Black-box check of any deployment: `BASE=… KEY=… TINY=… GLOBEX=… ADMIN=�
 
 ## Evaluation (summary)
 
-| Local profile (Gemma 4 E2B, 27 hard-flag in-domain + 5 OOS cases) | |
-|---|---|
-| Intent accuracy (kNN alone / model header) | 88.9% (100% / 96.0%) |
-| OOS refusal / in-domain false refusal | 100% / 7.4% |
-| TTFT p50 / total p50 | 1.13 s / 1.54 s |
-| Cloud profile (Gemini 3.5 Flash) | ⏳ pending (embedding quota reset) |
+27 hard-flag in-domain + 5 OOS cases, end to end through the gateway:
+
+| | Local: Gemma 4 E2B (Ollama) | Cloud: Gemini 3.5 Flash |
+|---|---|---|
+| Intent accuracy on answers from the model | 96.0% (24/25) | 100% (14/14)¹ |
+| Intent accuracy overall (refusals = wrong) | 88.9% | 96.3%¹ |
+| OOS refusal / in-domain false refusal | 100% / 7.4% | 100% / 3.7% |
+| Answer similarity to gold (model answers) | 0.895 | 0.910 |
+| TTFT p50, model served first try | 1.13 s | 4.17 s² |
+| Cost (list price) | $0 | ~$0.0025 per answer |
+
+¹ The Gemini free tier allows **20 generation requests per day per model**; after that the mock answered (12 of
+26), visibly labelled. ² Gemini reported 503 "high demand" during the run.
 
 Retrieval-only (297 queries): dense hit@1 96.0% vs hybrid 94.9% → `RETRIEVAL_MODE=dense`.
 Details and caveats (n is small; one case = 3.7 pp): [`eval/report.md`](eval/report.md).
@@ -139,7 +146,7 @@ REQUIRE_DB=1 pnpm -r test     # database tests fail (instead of skipping) when P
 LIVE=gemini pnpm --filter gateway exec vitest run src/backends/live.test.ts   # opt-in real-provider smoke
 ```
 
-202 automated tests (45 against a real Postgres: auth, fail-closed quota incl. a 3N-parallel concurrency test,
+204 automated tests (45 against a real Postgres: auth, fail-closed quota incl. a 3N-parallel concurrency test,
 metering, SSE contract, fallback, escalation, refusal); adapters are tested against responses recorded from
 the real providers.
 

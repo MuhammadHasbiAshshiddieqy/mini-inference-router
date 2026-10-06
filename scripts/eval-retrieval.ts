@@ -15,6 +15,7 @@ import { createGeminiEmbedder } from "../apps/gateway/src/embeddings/gemini.ts";
 import { createOllamaEmbedder } from "../apps/gateway/src/embeddings/ollama.ts";
 import type { Embedder } from "../apps/gateway/src/embeddings/types.ts";
 import { databaseEnv, fail, parseCliArgs, parseScriptEnv } from "./lib/cli.ts";
+import { retryOnRateLimit } from "./lib/retry.ts";
 import { fmtDeltaPp, fmtPct, goldRank, isConfusable, isHard, mrr, rate } from "./lib/eval-metrics.ts";
 
 const ROOT = (f: string) => fileURLToPath(new URL(`../${f}`, import.meta.url));
@@ -85,7 +86,7 @@ try {
   console.log(`Retrieval eval: ${queries.length} queries, model ${emb.model}, k=${K}, depth=${DEPTH}, RRF k=${RRF_K}`);
   const vectors: number[][] = [];
   for (let i = 0; i < queries.length; i += 50) {
-    vectors.push(...(await emb.embedQueries(queries.slice(i, i + 50).map((q) => q.text))));
+    vectors.push(...(await retryOnRateLimit(() => emb.embedQueries(queries.slice(i, i + 50).map((q) => q.text)))));
     // Gemini free tier: 100 embedded texts per minute per project (see embed_kb.ts).
     if (args.provider === "gemini" && i + 50 < queries.length) await new Promise((r) => setTimeout(r, 31_000));
   }

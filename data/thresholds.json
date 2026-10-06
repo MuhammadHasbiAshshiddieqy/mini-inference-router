@@ -30,8 +30,30 @@
       "oos_recall": 1,
       "rule": "T_trgm_oos keeps in-domain recall >= 0.95 (lexical fallback only)",
       "split": "dev + dev_oos",
-      "kb_embedding_model": "nomic-embed-text",
-      "computed_at": "2026-10-06T11:31:53.708Z"
+      "kb_embedding_model": "gemini-embedding-001",
+      "computed_at": "2026-10-06T13:23:28.859Z"
+    }
+  },
+  "gemini-embedding-001": {
+    "T_oos": 0.768,
+    "T_high": 0.828,
+    "calibration": {
+      "n_in_domain": 270,
+      "n_oos": 15,
+      "in_domain_recall": 0.981,
+      "oos_recall": 1,
+      "in_domain_top1": {
+        "min": 0.688,
+        "p30": 0.828,
+        "median": 0.844
+      },
+      "oos_top1": {
+        "max": 0.681,
+        "median": 0.584
+      },
+      "rule": "T_oos keeps in-domain recall >= 0.98; T_high = p30 of in-domain top-1",
+      "split": "dev + dev_oos",
+      "computed_at": "2026-10-06T13:23:28.859Z"
     }
   }
 }

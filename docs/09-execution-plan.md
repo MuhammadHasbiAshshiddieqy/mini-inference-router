@@ -117,7 +117,7 @@ Read: `docs/07`.
 Read: `docs/08` §2–§3.
 - [ ] Neon: migrate, seed, `kb:embed --provider gemini`, calibrate (cloud). Commit caches and thresholds.
 - [ ] Vercel gateway + console projects, env vars, `sin1`, CORS, `maxDuration: 120`, Deployment Protection off for production. `scripts/smoke.sh`.
-- [ ] Run eval config A (against the deployed or a local cloud-profile gateway; record which) → `eval:compare` → `eval/report.md`.
+- [x] Run eval config A (against the deployed or a local cloud-profile gateway; record which) → `eval:compare` → `eval/report.md`. *(local cloud-profile gateway, 2026-10-06; Gemini's 20 requests/day/model free-tier cap limited run 1 to 14 Gemini answers)*
 **Verify:** `smoke.sh` all PASS against prod. SSE streams incrementally on prod (`curl -N`). The production URL opens in a private window without a Vercel login. Neon wakes from scale-to-zero and the first request still succeeds.
 **Commit:** `feat(deploy): cloud profile on Vercel + Neon, eval results`
 

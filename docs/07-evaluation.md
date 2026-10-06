@@ -100,6 +100,8 @@ pnpm eval -- --label cloud-minimal --gateway http://localhost:8787 --key $SEED_K
 
 Config B `local-ollama` (2026-10-06): intent accuracy 88.9% (kNN alone 100%, LLM header 96%), OOS refusal 100%, in-domain false refusal 7.4% (2 hard-flag cases pre-gated at dense top-1 0.653 and 0.637 < T_oos 0.668), answer similarity 0.895, TTFT p50 1.13 s, escalation 3.1%. The third miss: "I'm trying to get my damn bills" — kNN `get_invoice` (right), LLM `check_invoice` twice; top-1 0.80 ≥ T_high but vote share < 0.8, so the table answers with the LLM intent.
 
+Config A `cloud-minimal` (2026-10-06, local gateway with `PROFILE=cloud`): **run 1** — `gemini-3.5-flash` answered 14 in-domain cases, all with the right intent (header accuracy 14/14), answer similarity 0.910, TTFT p50 4.2 s on first-try answers (Gemini reported 503 "high demand" in the same window); after ~20 attempts the **free-tier daily generation quota (20 requests/day/project/model)** ran out and the mock answered the remaining 12. In-domain false refusal 3.7% (1/27: "recover_password", top-1 below T_oos 0.768). **Run 2** (same day) got no Gemini answer at all (quota spent): 26/26 answers from the mock, fallback 81%, zero errors — evidence for the availability path, not for model quality. `eval/report.md` compares run 1 with config B; rows marked "excl. mock" isolate the real model. Since eval aggregates are now recomputed from per-case records (`scripts/lib/eval-aggregate.ts`), mock-served cases are excluded from the LLM-header and real-model rows.
+
 ## 5. Unit tests vs eval
 
 Unit and integration tests prove correctness of mechanics (auth, quota, fallback, parsing) deterministically with fakes.

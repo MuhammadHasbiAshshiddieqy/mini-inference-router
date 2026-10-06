@@ -10,7 +10,8 @@ import { DatasetRowSchema, OosRowSchema, createSseParser, parseSseEvent, type Ss
 import { z } from "zod";
 import { createOllamaEmbedder } from "../apps/gateway/src/embeddings/ollama.ts";
 import { fail, parseCliArgs, parseScriptEnv } from "./lib/cli.ts";
-import { cosine, goldRank, isHard, mean, pct, rate } from "./lib/eval-metrics.ts";
+import { aggregate, type EvalCase } from "./lib/eval-aggregate.ts";
+import { cosine, goldRank } from "./lib/eval-metrics.ts";
 
 const ROOT = (f: string) => fileURLToPath(new URL(`../${f}`, import.meta.url));
 const SCORER_MODEL = "nomic-embed-text";
@@ -73,7 +74,7 @@ let cases: Case[] = [
 ];
 if (args.limit) cases = cases.slice(0, Number(args.limit));
 
-type Record_ = {
+type Record_ = EvalCase & {
   id: string;
   kind: Case["kind"];
   gold: string;
@@ -263,74 +264,9 @@ try {
   console.warn(`  ${scorerNote}`);
 }
 
-const inDomain = records.filter((r) => r.kind === "in_domain");
-const oos = records.filter((r) => r.kind === "oos");
-const ok = records.filter((r) => !r.error || r.outcome);
-const num = (xs: (number | null)[]) => xs.filter((x): x is number => x !== null);
-const llmCases = records.filter((r) => (r.usage?.total ?? 0) > 0);
-const totalCost = records.reduce((s, r) => s + (r.cost_usd ?? 0), 0);
-const aggregates = {
-  n: {
-    total: records.length,
-    in_domain: inDomain.length,
-    oos: oos.length,
-    errors: records.filter((r) => r.error && !r.outcome).length,
-  },
-  intent_accuracy: rate(inDomain.map((r) => r.correct)),
-  knn_accuracy: rate(inDomain.map((r) => r.knn_intent === r.gold)),
-  llm_header_accuracy: rate(inDomain.filter((r) => r.llm_intent).map((r) => r.llm_intent === r.gold)),
-  hard_flag_intent_accuracy: rate(inDomain.filter((r) => isHard(r.flags)).map((r) => r.correct)),
-  retrieval_hit1: rate(inDomain.map((r) => r.hit1)),
-  retrieval_hit5: rate(inDomain.map((r) => r.hit5)),
-  oos_refusal_rate: rate(oos.map((r) => r.refused)),
-  in_domain_false_refusal_rate: rate(inDomain.map((r) => r.refused)),
-  refusal_reasons: Object.fromEntries(
-    [...new Set(records.flatMap((r) => (r.refusal_reason ? [r.refusal_reason] : [])))].map((k) => [
-      k,
-      records.filter((r) => r.refusal_reason === k).length,
-    ]),
-  ),
-  answer_similarity: {
-    mean: mean(num(answered.map((r) => r.answer_similarity))),
-    p50: pct(num(answered.map((r) => r.answer_similarity)), 0.5),
-    min: Math.min(...num(answered.map((r) => r.answer_similarity))),
-    n: answered.length,
-    method: scorerNote,
-  },
-  latency_ms: {
-    client_ttft_p50: pct(num(ok.map((r) => r.client_ttft_ms)), 0.5),
-    client_ttft_p95: pct(num(ok.map((r) => r.client_ttft_ms)), 0.95),
-    client_total_p50: pct(num(ok.map((r) => r.client_total_ms)), 0.5),
-    client_total_p95: pct(num(ok.map((r) => r.client_total_ms)), 0.95),
-    server_ttft_p50: pct(num(ok.map((r) => r.server_ttft_ms)), 0.5),
-    server_latency_p50: pct(num(ok.map((r) => r.server_latency_ms)), 0.5),
-  },
-  // Per request that reached a model (pre-gate refusals use no tokens and would dilute the mean).
-  tokens_mean: {
-    prompt: mean(num(llmCases.map((r) => r.usage?.prompt ?? null))),
-    completion: mean(num(llmCases.map((r) => r.usage?.completion ?? null))),
-    thinking: mean(num(llmCases.map((r) => r.usage?.thinking ?? null))),
-    n_llm_cases: llmCases.length,
-    estimated_cases: records.filter((r) => r.usage?.estimated).length,
-  },
-
-  cost_usd: {
-    total: totalCost,
-    mean_per_case: records.length ? totalCost / records.length : null,
-    per_1000_requests: records.length ? (totalCost / records.length) * 1000 : null,
-  },
-  reliability: {
-    fallback_rate: rate(records.map((r) => r.fallback_fired)),
-    escalation_rate: rate(records.map((r) => r.escalated)),
-    error_rate: rate(records.map((r) => Boolean(r.error))),
-    outcomes: Object.fromEntries(
-      [...new Set(records.map((r) => r.outcome ?? "error"))].map((o) => [
-        o,
-        records.filter((r) => (r.outcome ?? "error") === o).length,
-      ]),
-    ),
-  },
-};
+const aggregates = aggregate(records, scorerNote);
+const totalCost = aggregates.cost_usd.total;
+const answeredN = aggregates.answer_similarity.n;
 
 const result = { label, gateway, fingerprint: health, run_at: new Date().toISOString(), aggregates, cases: records };
 mkdirSync(ROOT("eval/results"), { recursive: true });
@@ -344,7 +280,7 @@ console.log(
 console.log(
   `  OOS refusal ${p(aggregates.oos_refusal_rate)}, in-domain false refusal ${p(aggregates.in_domain_false_refusal_rate)}, hit@1 ${p(aggregates.retrieval_hit1)}`,
 );
-console.log(`  answer similarity mean ${aggregates.answer_similarity.mean?.toFixed(3) ?? "—"} (n=${answered.length})`);
+console.log(`  answer similarity mean ${aggregates.answer_similarity.mean?.toFixed(3) ?? "—"} (n=${answeredN})`);
 console.log(
   `  TTFT p50/p95 ${aggregates.latency_ms.client_ttft_p50}/${aggregates.latency_ms.client_ttft_p95} ms, total p50/p95 ${aggregates.latency_ms.client_total_p50}/${aggregates.latency_ms.client_total_p95} ms`,
 );

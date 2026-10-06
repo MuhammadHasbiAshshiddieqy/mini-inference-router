@@ -5,6 +5,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fail } from "./lib/cli.ts";
+import { aggregate, type Aggregates, type EvalCase } from "./lib/eval-aggregate.ts";
 import { fmtDeltaPp, fmtNum, fmtPct } from "./lib/eval-metrics.ts";
 
 type Case = {
@@ -23,34 +24,20 @@ type Result = {
   gateway: string;
   run_at: string;
   fingerprint: Record<string, unknown>;
-  aggregates: Record<string, unknown> & {
-    intent_accuracy: number | null;
-    knn_accuracy: number | null;
-    llm_header_accuracy: number | null;
-    hard_flag_intent_accuracy: number | null;
-    retrieval_hit1: number | null;
-    retrieval_hit5: number | null;
-    oos_refusal_rate: number | null;
-    in_domain_false_refusal_rate: number | null;
-    answer_similarity: { mean: number | null; n: number; method: string };
-    latency_ms: Record<string, number | null>;
-    tokens_mean: { prompt: number | null; completion: number | null; thinking: number | null; estimated_cases: number };
-    cost_usd: { total: number; mean_per_case: number | null; per_1000_requests: number | null };
-    reliability: {
-      fallback_rate: number | null;
-      escalation_rate: number | null;
-      error_rate: number | null;
-      outcomes: Record<string, number>;
-    };
-    n: { total: number; in_domain: number; oos: number };
-  };
-  cases: Case[];
+  aggregates: Aggregates;
+  cases: (Case & EvalCase)[];
 };
 
 const ROOT = (f: string) => fileURLToPath(new URL(`../${f}`, import.meta.url));
 const files = process.argv.slice(2).filter((a) => a !== "--");
 if (files.length === 0) fail("usage: pnpm eval:compare -- eval/results/A.json eval/results/B.json");
-const results = files.map((f) => JSON.parse(readFileSync(f, "utf-8")) as Result);
+// Aggregates are recomputed from the per-case records with the current definitions (eval-aggregate.ts).
+const results = files.map((f) => {
+  const r = JSON.parse(readFileSync(f, "utf-8")) as Omit<Result, "aggregates"> & {
+    aggregates: { answer_similarity?: { method?: string } };
+  };
+  return { ...r, aggregates: aggregate(r.cases, r.aggregates.answer_similarity?.method ?? "") } as Result;
+});
 const two = results.length === 2;
 const [A, B] = results;
 
@@ -92,22 +79,30 @@ row(["prompt", ...results.map((r) => fp(r, "prompt_version"))]);
 row(["thresholds", ...results.map((r) => fp(r, "thresholds"))]);
 row(["gateway / run at", ...results.map((r) => `${r.gateway} · ${r.run_at.slice(0, 16)}Z`)]);
 out();
+for (const r of results) {
+  const note = (r as Result & { note?: string }).note;
+  if (note) out(`> **${r.label}:** ${note}`);
+}
+out();
 
 out("## 2. Aggregate metrics");
 out();
 type Metric = [string, (r: Result) => number | null | undefined, "pct" | "num" | "ms" | "usd" | "tok"];
 const metrics: Metric[] = [
   ["Intent accuracy (final, refusals = wrong)", (r) => r.aggregates.intent_accuracy, "pct"],
+  ["  on answers from a real model (excl. mock)", (r) => r.aggregates.model_answers.intent_accuracy, "pct"],
   ["  kNN-only intent accuracy", (r) => r.aggregates.knn_accuracy, "pct"],
-  ["  LLM header accuracy (when a header was produced)", (r) => r.aggregates.llm_header_accuracy, "pct"],
+  ["  LLM header accuracy (real-model headers only)", (r) => r.aggregates.llm_header_accuracy, "pct"],
   ["  hard-flag cases (Z/Q/K/W)", (r) => r.aggregates.hard_flag_intent_accuracy, "pct"],
   ["Retrieval hit@1 / gold intent", (r) => r.aggregates.retrieval_hit1, "pct"],
   ["Retrieval hit@5", (r) => r.aggregates.retrieval_hit5, "pct"],
   ["OOS refusal rate (n=5)", (r) => r.aggregates.oos_refusal_rate, "pct"],
   ["In-domain false-refusal rate (n=27)", (r) => r.aggregates.in_domain_false_refusal_rate, "pct"],
   ["Answer similarity to gold (mean cosine)", (r) => r.aggregates.answer_similarity.mean, "num"],
+  ["  on answers from a real model (excl. mock)", (r) => r.aggregates.model_answers.answer_similarity_mean, "num"],
   ["TTFT p50 (client)", (r) => r.aggregates.latency_ms["client_ttft_p50"], "ms"],
   ["TTFT p95 (client)", (r) => r.aggregates.latency_ms["client_ttft_p95"], "ms"],
+  ["TTFT p50, real model served first try", (r) => r.aggregates.latency_ms["model_ttft_p50"], "ms"],
   ["Total latency p50 (client)", (r) => r.aggregates.latency_ms["client_total_p50"], "ms"],
   ["Total latency p95 (client)", (r) => r.aggregates.latency_ms["client_total_p95"], "ms"],
   ["Mean prompt tokens (per LLM request)", (r) => r.aggregates.tokens_mean.prompt, "tok"],
@@ -150,6 +145,9 @@ for (const [name, pick, kind] of metrics) {
 out();
 out(
   `Outcomes: ${results.map((r) => `**${r.label}** ${JSON.stringify(r.aggregates.reliability.outcomes)}`).join(" · ")}.`,
+);
+out(
+  `Served by: ${results.map((r) => `**${r.label}** ${JSON.stringify(r.aggregates.served_by)}`).join(" · ")}. The mock answers with the kNN intent and the top-1 KB answer, so the rows marked “excl. mock” isolate the real model.`,
 );
 out(`Answer similarity: ${A!.aggregates.answer_similarity.method}.`);
 out();

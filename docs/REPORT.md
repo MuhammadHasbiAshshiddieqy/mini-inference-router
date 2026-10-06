@@ -2,8 +2,8 @@
 
 **Live:** console ⏳ _pending deploy_ · gateway ⏳ _pending deploy_ · **Repo:** https://github.com/MuhammadHasbiAshshiddieqy/mini-inference-router · **Video:** ⏳ _pending_
 
-> Status (6 Oct 2026): everything below the deploy is built and measured on the local profile. The cloud
-> numbers (config A) wait for the Gemini embedding quota to reset (§6); items marked ⏳ are filled in after deploy.
+> Status (6 Oct 2026): built and measured on the local profile and on the cloud profile run locally (Gemini).
+> Items marked ⏳ (live URLs, video) are filled in after deploy.
 
 ## 1. Summary
 
@@ -12,9 +12,12 @@ customer-support assistant over the Bitext dataset. Every request goes through p
 token-budget reservation that fails closed, routing with recorded fallback, SSE streaming, and metering of
 tokens, latency, cost and outcome. On the local profile (Gemma 4 E2B via Ollama) the assistant reaches
 **88.9% intent accuracy** on 27 hard-flag held-out cases (kNN retrieval alone: 100%), refuses **5/5**
-out-of-scope messages without calling a model, and streams the first token at **1.13 s p50**. The biggest
-trade-off: refusal is gated on a calibrated dense-similarity threshold, which is safe for out-of-scope
-traffic but produced **2/27 false refusals** on heavily colloquial or misspelt questions.
+out-of-scope messages without calling a model, and streams the first token at **1.13 s p50**. On the cloud
+profile, every answer Gemini 3.5 Flash produced had the right intent (**14/14**, similarity 0.910), but the
+free tier allows only **20 generation requests per day per model**, so the mock answered the rest — the
+system stayed available and labelled every fallback. The biggest trade-off: refusal is gated on a calibrated
+dense-similarity threshold, safe for out-of-scope traffic but strict on misspelt or rude phrasing
+(**2/27** false refusals locally, **1/27** with Gemini embeddings).
 
 ## 2. Architecture
 
@@ -63,7 +66,7 @@ traffic but produced **2/27 false refusals** on heavily colloquial or misspelt q
 | embedding service down | lexical (trigram) retrieval, confidence capped at `medium` |
 | KB rows or thresholds missing | 503 `assistant_unavailable`; `/healthz` 503 `degraded` with the fixing command |
 
-Test suite: **202 automated tests** (148 gateway incl. 45 against a real Postgres, 43 shared, 11 scripts) plus
+Test suite: **204 automated tests** (148 gateway incl. 45 against a real Postgres, 43 shared, 13 scripts) plus
 3 opt-in live smoke tests. `scripts/smoke.sh` (10 black-box checks) passes **13/13** against the local profile,
 natively and in Docker from a clean clone.
 
@@ -81,9 +84,12 @@ the same backend with `thinking: low` and a format reminder. Both are recorded p
 (`reason`: `primary`, `fallback:<status>`, `escalation:<why>`) and visible in the console's attempts timeline
 and the request inspector (`docs/img/request-detail.png`).
 
-Known weakness, observed live: both cloud models are from one provider, and on 6 Oct `gemini-3-flash-preview`
-answered **503 "high demand"** twice in a row while 3.5 Flash was healthy. A preview fallback can be capacity-limited
-exactly when needed; the mock still guarantees an answer, and a non-Google fallback is the obvious next step.
+Known weakness, observed live: both cloud models are from one provider. On 6 Oct `gemini-3-flash-preview`
+answered **503 "high demand"** while 3.5 Flash was healthy, later both returned 503s and TTFT timeouts, and both
+hit the **free-tier cap of 20 generation requests per day per model** within one eval run. Each time the router
+fell through to the mock and recorded why (`rate_limited`, `upstream_error`, `timeout_ttft`); in the second cloud
+run the mock answered 26/26 in-domain questions with no error. Availability held; model quality did not. A
+non-Google fallback (or a paid tier) is the obvious next step.
 
 ## 5. Models and retrieval
 
@@ -108,7 +114,7 @@ exactly when needed; the mock still guarantees an answer, and a non-Google fallb
   evidence (top-1 ≥ `T_high` and vote ≥ 0.8), otherwise answer `medium` with the model's intent.
   Thresholds are calibrated on the dev split only (270 + 15 OOS): `nomic-embed-text` **T_oos 0.668** (in-domain
   recall 98.1%, OOS recall 100%), **T_high 0.787**, trigram **T_trgm_oos 0.428**. The margin is thin: the
-  highest OOS top-1 is 0.654. `gemini-embedding-001` thresholds: ⏳ pending (§6).
+  highest OOS top-1 is 0.654. `gemini-embedding-001`: **T_oos 0.768** (in-domain recall 98.1%, OOS recall 100%), **T_high 0.828**; on dev its classes separate cleanly (highest OOS top-1 0.681 < lowest in-domain 0.688).
 
 ## 6. Evaluation
 
@@ -120,23 +126,33 @@ are deduplicated on normalized instructions, but kNN accuracy is still optimisti
 Answer quality = cosine(answer, gold answer) with one fixed scorer (`nomic-embed-text`) for every config.
 The LLM-judge metric was cut (§8).
 
-| Metric | **B: local-ollama** (Gemma 4 E2B) | **A: cloud-minimal** (Gemini 3.5 Flash) |
+| Metric | **B: local-ollama** (Gemma 4 E2B) | **A: cloud-minimal, run 1** (Gemini 3.5 Flash) |
 |---|---|---|
-| Intent accuracy (final; refusals count as wrong) | 88.9% | ⏳ |
-| kNN-only / LLM-header accuracy | 100% / 96.0% | ⏳ |
-| OOS refusal rate (n=5) | 100% | ⏳ |
-| In-domain false-refusal rate (n=27) | 7.4% | ⏳ |
-| Answer similarity to gold (mean) | 0.895 | ⏳ |
-| TTFT p50 / p95 (client) | 1,134 / 1,570 ms | ⏳ |
-| Total latency p50 / p95 | 1,542 / 2,367 ms | ⏳ |
-| Tokens per LLM request (prompt / completion) | 1,122 / 91 | ⏳ |
-| Cost per 1,000 requests (list price) | $0 (local) | ⏳ |
-| Escalation / fallback rate | 3.1% / 0% | ⏳ |
+| Intent accuracy (final; refusals count as wrong) | 88.9% | 96.3%¹ |
+| Intent accuracy on real-model answers (excl. mock) | 96.0% (24/25) | **100% (14/14)** |
+| kNN-only / LLM-header accuracy | 100% / 96.0% | 100% / 100% (14/14) |
+| OOS refusal rate (n=5) | 100% | 100% |
+| In-domain false-refusal rate (n=27) | 7.4% | 3.7% |
+| Answer similarity to gold (real-model answers) | 0.895 | 0.910 |
+| TTFT p50 (client; real model, first try) | 1,134 ms | 4,174 ms² |
+| TTFT p50 / p95 over all cases (incl. fallback) | 1,134 / 1,570 ms | 7,377 / 17,565 ms |
+| Tokens per LLM request (prompt / completion / thinking) | 1,122 / 91 / 0 | 1,092 / 125 / 0 |
+| Cost (list price) | $0 (local) | $0.0025 per Gemini answer (~$2.52 / 1k) |
+| Escalation / fallback rate | 3.1% / 0% | 0% / 37.5% |
+
+¹ 12 of the 26 answered in-domain cases were served by the mock after Gemini's free-tier daily quota (20
+generation requests/day/model) ran out; the mock answers with the kNN intent and the top-1 KB answer, so this row
+measures the system, not the model. ² Gemini reported 503 "high demand" during the run; the live smoke earlier the
+same day measured 1.18 s. A second cloud run the same day got no Gemini answer at all (quota spent): the mock
+answered 26/26 with no error (`eval/results/cloud-minimal-run2.json`).
 
 Full tables, the per-intent grid and the case list are in [`eval/report.md`](../eval/report.md).
 
-**Interpretation.** Retrieval is not the bottleneck (kNN alone is right on all 27); the two policies around it
-are. (1) Two hard-flag questions — "want help trying to edit my addres" (top-1 0.653) and "how long does it take
+**Interpretation.** Retrieval is not the bottleneck (kNN alone is right on all 27 in both configs). Gemini 3.5
+Flash was right on every intent it produced (14/14) and its answers are closer to the gold ones (0.910 vs 0.895);
+Gemma 4 E2B, a 2B-effective local model, missed one intent and needed one escalation. With Gemini embeddings only
+one question was pre-refused (vs two with nomic). On the local profile the two policies around retrieval explain
+the misses. (1) Two hard-flag questions — "want help trying to edit my addres" (top-1 0.653) and "how long does it take
 for a damn article to arrive?" (0.637) — sit just under `T_oos` = 0.668 and are refused before the model runs:
 the threshold, calibrated for 98% recall on dev, is strict for misspelt or rude phrasing. (2) "I'm trying to get
 my damn bills" — kNN `get_invoice` (right), the model `check_invoice` twice; top-1 0.80 is above `T_high` but the
@@ -168,12 +184,13 @@ lines (`Line 1:`, `Line 2: ---`); the parser now tolerates them, which removed a
 | Response caching | Would distort latency and cost measurement | Semantic cache keyed by embedding |
 | Charging embedding tokens to quota | Negligible cost; keeps the quota model simple | An embedding usage line in metering |
 | Retrieval eval on `gemini-embedding-001` | The free tier allows 1,000 embedded texts per day per project; it was spent on the KB build | Run `pnpm eval:retrieval -- --provider gemini` on a fresh quota day |
+| A clean 27-case Gemini eval in one day | The free tier allows 20 generation requests per day per project per model; run 1 got 14 Gemini answers before the cap, run 2 none. Reported on the real-model answers (n=14) with that caveat | Spread the eval over several project-days, or a paid tier |
 | Full Docker mode A run on the owner's Mac | It pulls several GB into a Docker volume; the wiring was verified without the pull (it degrades to lexical + mock as designed) and mode B ran end to end | `docker compose --profile ollama up --build` |
 
 ## 9. Trade-offs accepted
 
 - **One provider in the cloud** (two Gemini models + mock): zero cost and consistent behaviour, but correlated failures (seen live: a 503 on the preview fallback). Mitigated only by the mock.
-- **Free tiers shape everything:** sequential eval with pauses; the embedding quota (100 texts/min, 1,000/day per project) caps the KB build and the demo's question rate; beyond it, retrieval degrades to lexical instead of failing.
+- **Free tiers shape everything:** Gemini generation is capped at **20 requests per day per model**, so the deployed demo answers ~40 questions/day with Gemini (primary + fallback) and then from the mock, visibly labelled. The embedding quota (100 texts/min, 1,000/day per project) caps the KB build and the question rate; beyond it, retrieval degrades to lexical instead of failing. The eval ran sequentially with pauses and still could not finish on Gemini in one day.
 - **No fallback after the first token:** correctness over availability for partially streamed answers.
 - **Thresholds calibrated on a small dev split:** per embedding model, and they move with a different KB; the eval shows they are strict on hard-flag phrasing.
 - **Paraphrase-heavy data:** intent accuracy is optimistic; hard-flag and OOS cases and separate kNN / LLM numbers counter that.

@@ -15,6 +15,7 @@ import { createOllamaEmbedder } from "../apps/gateway/src/embeddings/ollama.ts";
 import type { Embedder } from "../apps/gateway/src/embeddings/types.ts";
 import { percentile, recallAbove, recallBelow, thresholdForRecall } from "./lib/calibration.ts";
 import { databaseEnv, describeDatabase, fail, parseCliArgs, parseScriptEnv } from "./lib/cli.ts";
+import { retryOnRateLimit } from "./lib/retry.ts";
 
 const DATA = (f: string) => fileURLToPath(new URL(`../data/${f}`, import.meta.url));
 const IN_DOMAIN_RECALL = 0.98;
@@ -73,7 +74,7 @@ try {
   const batch = 50;
   const vectors: number[][] = [];
   for (let i = 0; i < queries.length; i += batch) {
-    vectors.push(...(await emb.embedQueries(queries.slice(i, i + batch))));
+    vectors.push(...(await retryOnRateLimit(() => emb.embedQueries(queries.slice(i, i + batch)))));
     // Gemini free tier: 100 embedded texts per minute per project (see embed_kb.ts).
     if (provider === "gemini" && i + batch < queries.length) await new Promise((r) => setTimeout(r, 31_000));
   }

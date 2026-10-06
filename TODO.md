@@ -31,7 +31,7 @@ Done by Claude (2026-10-06):
 Owner only (accounts and keys; Claude cannot do these):
 - [ ] Two Google AI Studio projects: `router-demo` (Vercel) and `router-eval` (eval + embedding builds); put the eval key in `.env` as `GEMINI_API_KEY`
 - [x] Gemini key in `.env` works; `models.list` shows `gemini-3.5-flash`, `gemini-3-flash-preview`, `gemini-embedding-001` (2026-10-06). Embedding model decided: `gemini-embedding-001` (`gemini-embedding-2` returns one vector per batch)
-- [ ] Record actual RPM / RPD per model per project in `docs/12` §3; apply the decision rule (RPD < 200 → smaller SPA quotas, eval only on eval project, record video right after 14:00 WIB reset)
+- [x] Limits observed from real 429s (2026-10-06), recorded in `docs/12` §3: generation **20 req/day/project/model** (3.5 Flash and 3 Flash Preview), embeddings 100 texts/min and 1,000/day per project. Decision rule (RPD < 200) triggered: owner to decide demo strategy (see summary)
 - [ ] Neon project (Singapore, Postgres only), pooled connection string saved (needed by Phase 9; local Docker Postgres covers Phases 2–8)
 - [ ] Vercel account linked to GitHub (needed by Phase 9)
 - [ ] Read `docs/12` once end-to-end
@@ -81,7 +81,7 @@ Owner only (accounts and keys; Claude cannot do these):
 - [ ] Phase 9: `waitUntil` for the final metering write when the client disconnects on Vercel (hook `waitUntil` already in `createApp` deps; on Node the handler keeps running, verified)
 - [ ] Phase 9: call `attachDatabasePool(pool)` (`@vercel/functions`) when running on Vercel; needs a docs/11 row
 - [x] Gemini embedder verified live (768 dims, batch of 3, sim(query, cancel)=0.736 vs OOS 0.506); embedding model id settled
-- [ ] `pnpm kb:embed -- --provider gemini` (≈27 batch calls) — waiting for owner: confirm the key is from `router-eval`
+- [x] `pnpm kb:embed -- --provider gemini`: 1,350 rows cached (`data/embeddings/gemini-embedding-001.*`), resumed across two keys (same model, same vectors)
 - **Verify:** 1350 rows for `nomic-embed-text`; top-5 for "i want to cancel my order" = cancel_order; trigram on "cancel my oorder" ranks cancel_order highest
 - **Commit:** `feat(db): schema, seed, KB embeddings in pgvector`
 
@@ -136,11 +136,11 @@ Owner only (accounts and keys; Claude cannot do these):
 - **Commit:** `feat(eval): end-to-end eval runner and comparison`
 
 ## Phase 9 — Cloud + deploy (docs/08 §2–3)
-- [ ] Neon: migrate, seed, `kb:embed --provider gemini`, `calibrate` (cloud); commit caches + thresholds
+- [ ] Neon: migrate, seed, `kb:embed --provider gemini --from-cache-only` (cache + `gemini-embedding-001` thresholds already committed; no Gemini calls needed)
 - [ ] Vercel gateway project (root `apps/gateway`, `sin1`, `maxDuration: 120`, env, CORS) and console project (root `apps/console`, SPA rewrite, build env)
 - [ ] Deployment Protection off for production
-- [ ] `scripts/smoke.sh` (10 checks)
-- [ ] Run eval config A `cloud-minimal` → `eval:compare` → `eval/report.md`
+- [x] `scripts/smoke.sh` (10 checks): 13/13 PASS locally and in Docker; run against prod after deploy
+- [x] Run eval config A `cloud-minimal` → `eval:compare` → `eval/report.md` (local cloud-profile gateway; run 1: 14 Gemini answers before the 20 RPD cap, run 2: mock only; both committed)
 - **Verify:** smoke all PASS on prod; `curl -N` streams; private window without Vercel login; Neon cold wake succeeds
 - **Commit:** `feat(deploy): cloud profile on Vercel + Neon, eval results`
 
