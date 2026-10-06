@@ -93,11 +93,11 @@ Owner only (accounts and keys; Claude cannot do these):
 - **Commit:** `feat(gateway): auth, fail-closed quota, metering`
 
 ## Phase 4 — Backends + router (docs/04)
-- [ ] `backends/types.ts`, `mock.ts`, `ollama.ts`, `gemini.ts`, `registry.ts`; `config/profiles.ts` (cloud / local / hybrid), `config/pricing.ts` (with source + date)
-- [ ] Error classification: 429 → `rate_limited`, 5xx / provider 400 / empty stream → `upstream_error`, network → `network_error`
-- [ ] `router/plan.ts` (pure): tenant policy → tools capability → priority; decisions recorded
-- [ ] `router/execute.ts`: TTFT + total timers (cleared in `finally`), commit point, abort propagation, attempt rows, `force_fail`
-- [ ] Ollama boot check (`/api/tags`) + background warm-up; `/healthz` reachability (no LLM calls)
+- [x] `backends/types.ts`, `mock.ts`, `ollama.ts`, `gemini.ts`, `registry.ts`; `config/profiles.ts` (cloud / local / hybrid), `config/pricing.ts` (with source + date)
+- [x] Error classification: 429 → `rate_limited`, 5xx / provider 400 / empty stream → `upstream_error`, network → `network_error`
+- [x] `router/plan.ts` (pure): tenant policy → tools capability → priority; decisions recorded
+- [x] `router/execute.ts`: TTFT + total timers (cleared in `finally`), commit point, abort propagation, attempt rows, `force_fail`
+- [x] Ollama boot check (`/api/tags`) + background warm-up; `/healthz` reachability (no LLM calls)
 - **Tests:** `plan.test.ts`, `execute.test.ts` (ok, 429, TTFT timeout, total timeout, network, forced, after-first-token → `partial_error`, all fail, client abort), `pricing.test.ts`, adapter fixture tests, opt-in `LIVE=1` smoke
 - **Commit:** `feat(router): backends, routing rules, fallback with recorded attempts`
 

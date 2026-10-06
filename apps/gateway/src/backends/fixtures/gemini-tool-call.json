@@ -1,0 +1,66 @@
+[
+  {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "functionCall": {
+                "name": "get_order_status",
+                "args": {
+                  "order_id": "12345"
+                },
+                "id": "call_157897"
+              },
+              "thoughtSignature": "EmgKZgFpFH0Tzw4fr503o99VfWSLILH4mz8Pw5CIPX3ByXRmHi8itMrJsKSdFFONDrbBKQnSeIT5PWM4wyW2Mb2+07HiRnRk+J1FT8fooPmzwSHwCQaIpiKVfhn2Vyb3MT6dbHvuOOOcIA=="
+            }
+          ],
+          "role": "model"
+        },
+        "index": 0
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 61,
+      "candidatesTokenCount": 24,
+      "totalTokenCount": 85,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 61
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.5-flash"
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": ""
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "index": 0
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 61,
+      "candidatesTokenCount": 24,
+      "totalTokenCount": 85,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 61
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.5-flash"
+  }
+]

@@ -88,8 +88,8 @@ Priority: **P0** = must ship. **P1** = should ship. **P2** = only if time remain
 | R4 | Tenant policy: "enforces what each tenant is allowed" | P0 | `tenants.allowed_backends`, `max_output_tokens` | test: disallowed backend never attempted |
 | R5 | Metering: model, tokens, latency, est. cost, outcome → DB | P0 | `metering/*`, `config/pricing.ts`, tables `requests`, `route_attempts` | `request-path.test.ts` asserts rows; `pricing.test.ts`; console Requests view |
 | R6 | ≥2 model backends | P0 | `backends/gemini.ts`, `ollama.ts`, `mock.ts` | profiles in `config/profiles.ts` |
-| R7 | Defensible routing rules | P0 | `router/plan.ts` (pure function) | unit tests per rule; report section with eval numbers |
-| R8 | Fallback on failure or slowness | P0 | `router/execute.ts` | tests: 5xx, 429, TTFT timeout, network error → next backend |
+| R7 | Defensible routing rules | P0 | `router/plan.ts` (pure function), `config/profiles.ts` | `plan.test.ts` per rule; report section with eval numbers |
+| R8 | Fallback on failure or slowness | P0 | `router/execute.ts` | `execute.test.ts`: 5xx, 429, TTFT/total timeout, network error, forced failure → next backend; mid-stream → `partial_error`; client abort |
 | R9 | Fallback decision recorded and inspectable | P0 | `route_attempts` rows + SSE `route`/`attempt_failed` events + `GET /admin/requests/:id` | console attempt timeline |
 | R10 | At least one real model serves real requests | P0 | Gemini 3.5 Flash (cloud), Ollama (local) | deployed URL, video |
 | R11 | Retrieval over KB slice | P0 | `assistant/retrieve.ts`: dense (pgvector) and hybrid (dense + pg_trgm, RRF); lexical fallback when embedding fails (P1) | retrieval-only eval over 297 queries (doc 07 §2b) + hit@k in the end-to-end eval |

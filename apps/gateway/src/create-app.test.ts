@@ -10,7 +10,11 @@ function buildApp() {
   const getPool = () => {
     throw new Error("these tests must not touch the database");
   };
-  const app = createApp({ env, logger: createLogger("silent"), getPool });
+  const probeOllama = async (_host: string, models: string[]) => ({
+    reachable: true,
+    models_present: Object.fromEntries(models.map((m) => [m, true])),
+  });
+  const app = createApp({ env, logger: createLogger("silent"), getPool, probeOllama });
   // Test-only routes to exercise the error middleware.
   app.get("/test/app-error", () => {
     throw new AppError("quota_exceeded", 429, "Token quota exhausted", { remaining: 0 });
@@ -26,12 +30,20 @@ describe("gateway app", () => {
     const res = await buildApp().request("/healthz");
     expect(res.status).toBe(200);
     expect(res.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);
-    expect(await res.json()).toEqual({
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body).toMatchObject({
       status: "ok",
       profile: "local",
       embedding_model: "nomic-embed-text",
       retrieval_mode: "dense",
+      thinking_level: null,
+      ollama: { reachable: true, models_present: { "gemma4:e2b-mlx": true, "nomic-embed-text": true } },
     });
+    expect(body["backends"]).toEqual([
+      expect.objectContaining({ id: "ollama", model: "gemma4:e2b-mlx", priority: 0, supports_tools: true }),
+      expect.objectContaining({ id: "mock", model: "mock", priority: 1, supports_tools: false }),
+    ]);
+    expect(JSON.stringify(body)).not.toMatch(/api_key|test-admin/i); // no secrets in the fingerprint
   });
 
   it("gives every request a distinct request id", async () => {

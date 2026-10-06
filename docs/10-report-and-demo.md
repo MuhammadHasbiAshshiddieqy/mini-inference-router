@@ -69,6 +69,7 @@ Short version of docs/11-tech-decisions.md §12 (the "not used" table), with a l
 | Cross-instance circuit breaker | Serverless instances don't share memory; per-request fallback already covers failures | Breaker state in Postgres/Redis |
 | Response caching | Would distort latency and cost measurement | Semantic cache keyed by embedding |
 | Charging embedding tokens to quota | Negligible cost; keeps the quota model simple | Add an embedding usage line to metering |
+| In-memory circuit breaker (docs/04 §4 rule 4, P2) | Per-instance state only helps warm serverless instances; per-request fallback with TTFT/total timeouts already moves past a failing backend, and every skip would need its own attempt row | Breaker state in Postgres keyed by backend id, recorded as `skipped_circuit_open` |
 | *(add actual cuts made during the build)* | | |
 
 ## Part C: Trade-offs to state explicitly

@@ -1,0 +1,116 @@
+[
+  {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "To track"
+            }
+          ],
+          "role": "model"
+        },
+        "index": 0
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 21,
+      "candidatesTokenCount": 2,
+      "totalTokenCount": 23,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 21
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.5-flash"
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": " your refund, log into your account on the merchant's website and check your order"
+            }
+          ],
+          "role": "model"
+        },
+        "index": 0
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 21,
+      "candidatesTokenCount": 19,
+      "totalTokenCount": 40,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 21
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.5-flash"
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": " history, or monitor the status using the tracking link in your refund confirmation email."
+            }
+          ],
+          "role": "model"
+        },
+        "index": 0
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 21,
+      "candidatesTokenCount": 35,
+      "totalTokenCount": 56,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 21
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.5-flash"
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "",
+              "thoughtSignature": "EmgKZgFpFH0TfOVFr+c5TRj1Xt1CEy1VgBU+4IQIc7ekIGGlAuyULjfODejtYuJ1uK7eT66EJCKSNoz11wjUPEx3AiCfjkP+vlxGqBLj31j0cSuMY1Gk1hgVIywyvMfNa1gFIGKc/iIxUg=="
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "index": 0
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 21,
+      "candidatesTokenCount": 35,
+      "totalTokenCount": 56,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 21
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.5-flash"
+  }
+]

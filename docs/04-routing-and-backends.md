@@ -106,7 +106,7 @@ Applied in order. Every exclusion is recorded in `decisions` (returned in the `d
 2. **Capability**: if `request.tools` is present, keep only `supportsTools`. Empty → 422 `tools_unsupported`.
    (Owner rule: tool calling only on Gemini ≥ 3; 2.x is excluded by policy because its tool calling proved unreliable.)
 3. **Priority**: sort by `priority` (cheapest adequate real model first, then the independent-quota fallback, then the mock safety net).
-4. **Circuit breaker** (P2, optional): skip a backend for 30 s after 3 consecutive failures. In-memory per instance (on Vercel this
+4. **Circuit breaker** (P2, optional; **not built**, logged in doc 10 "What I cut"): skip a backend for 30 s after 3 consecutive failures. In-memory per instance (on Vercel this
    only helps warm instances, so say so in the report). Recorded as `skipped_circuit_open`.
 
 ### Why this order (defend in the report with eval numbers)
@@ -142,6 +142,14 @@ Notes:
 - "COMMITTED" means content has been **forwarded to the client**. For the support endpoint, the header phase (before `---`) is not yet forwarded, so a failure during the header can still fall back.
 - `debug.force_fail` makes `backend.stream` throw `forced_failure` immediately. This is the deterministic way to demo fallback on the deployed URL.
 - Timers must always be cleared (use `try/finally`) to avoid leaks.
+- Implementation notes (`router/execute.ts`, built in Phase 4):
+  - The **consumer marks the commit point** (`ctx.commit()`): the chat route commits on the first forwarded token, the support assistant only once its INTENT header is valid.
+  - Each `next()` on the provider stream is raced against the attempt's abort signal, so TTFT/total timeouts fire even if a provider ignores aborts (tested with a "stubborn" fake backend).
+  - A failure after commit is recorded as attempt status `mid_stream_error` (`error_detail` = underlying status + message) and the run ends with `partial_error`.
+  - A consumer may stop the run with a non-retryable `BackendError` (e.g. `invalid_output`): this is a **quality** signal for escalation (§6), so there is no fallback; the run ends `stopped`.
+  - `fallbackFired` = more than one attempt in the run (the loop only advances after a failure).
+- Mock timeouts are fixed (TTFT 10 s, total 30 s) because its latency is per request (`debug.mock_latency_ms` up to 20 s): a mock latency above 10 s demonstrates a TTFT timeout.
+- `supportsTools` for Gemini is derived from the model id (major version ≥ 3), so pointing `GEMINI_*_MODEL` at a 2.x model can never enable tools.
 
 ## 6. Escalation (support assistant only), different from fallback
 
@@ -178,3 +186,4 @@ We run on the free tier, so this is the **list-price equivalent cost**. State th
   client abort → `client_aborted` and upstream signal aborted; attempt rows recorded with correct reasons and statuses.
 - `pricing.test.ts`: cost math including thinking tokens.
 - Adapter contract tests with recorded fixtures (no live calls in CI). Add one **opt-in** live smoke test per adapter behind `LIVE=1`.
+  Built: fixtures recorded from `gemini-3.5-flash` (text + tool call) and `gemma4:e2b-mlx` on 2026-10-06 in `backends/fixtures/`; live smoke in `backends/live.test.ts` (`LIVE=gemini|ollama|1`).

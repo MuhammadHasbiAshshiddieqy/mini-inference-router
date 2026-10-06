@@ -74,9 +74,9 @@ Read: `docs/03` §2–§7.
 
 ## Phase 4: Backends + router
 Read: `docs/04`.
-- [ ] `backends/types.ts`, `mock.ts`, `ollama.ts`, `gemini.ts` (**verify SDK fields and model IDs first**; cite sources in comments), `registry.ts`, `config/profiles.ts`, `config/pricing.ts`.
-- [ ] `router/plan.ts` (pure) and `router/execute.ts` (fallback loop, TTFT/total timers, commit point, abort propagation, attempt recording).
-- [ ] Ollama boot check + warm-up. `/healthz` shows backend reachability (cheap checks only; no LLM calls on health).
+- [x] `backends/types.ts`, `mock.ts`, `ollama.ts`, `gemini.ts` (**verify SDK fields and model IDs first**; cite sources in comments), `registry.ts`, `config/profiles.ts`, `config/pricing.ts`.
+- [x] `router/plan.ts` (pure) and `router/execute.ts` (fallback loop, TTFT/total timers, commit point, abort propagation, attempt recording).
+- [x] Ollama boot check + warm-up. `/healthz` shows backend reachability (cheap checks only; no LLM calls on health).
 **Tests:** all of doc 04 §8 with fake backends and fake timers. Opt-in `LIVE=1` smoke for Gemini and Ollama.
 **Commit:** `feat(router): backends, routing rules, fallback with recorded attempts`
 
