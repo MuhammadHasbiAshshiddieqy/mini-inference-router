@@ -74,7 +74,8 @@ try {
   const vectors: number[][] = [];
   for (let i = 0; i < queries.length; i += batch) {
     vectors.push(...(await emb.embedQueries(queries.slice(i, i + batch))));
-    if (provider === "gemini" && i + batch < queries.length) await new Promise((r) => setTimeout(r, 1500));
+    // Gemini free tier: 100 embedded texts per minute per project (see embed_kb.ts).
+    if (provider === "gemini" && i + batch < queries.length) await new Promise((r) => setTimeout(r, 31_000));
   }
 
   const dense: number[] = [];

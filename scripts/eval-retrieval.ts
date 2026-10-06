@@ -86,7 +86,8 @@ try {
   const vectors: number[][] = [];
   for (let i = 0; i < queries.length; i += 50) {
     vectors.push(...(await emb.embedQueries(queries.slice(i, i + 50).map((q) => q.text))));
-    if (args.provider === "gemini" && i + 50 < queries.length) await new Promise((r) => setTimeout(r, 1500));
+    // Gemini free tier: 100 embedded texts per minute per project (see embed_kb.ts).
+    if (args.provider === "gemini" && i + 50 < queries.length) await new Promise((r) => setTimeout(r, 31_000));
   }
 
   const results = new Map<string, Result[]>();

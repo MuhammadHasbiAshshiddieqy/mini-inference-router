@@ -46,6 +46,8 @@ during pre-flight, because providers change free tiers often.
 | Data use | Free-tier prompts may be used to improve Google products | Fine for a public dataset; not for real customer data | Stated in the report |
 | Thinking default | If unset: `gemini-3.5-flash` → `medium`, `gemini-3-flash-preview` → `high` (checked 2026-10-06) | Latency and cost spike | Always send `thinkingLevel` explicitly (`minimal`) |
 
+**Observed 2026-10-06 (embeddings):** the free tier limits `embed_content` to **100 embedded texts per minute per project** (quotaId `EmbedContentRequestsPerMinutePerUserPerProjectPerModel-FreeTier`, `quotaValue: 100`); a batch of 50 texts counts as 50. Building the 1,350-row KB therefore takes ~14 minutes (`kb:embed` defaults to 50 texts + 31 s pause for Gemini, and resumes from the cache after a 429). At request time each support question is one embedded text, so the deployed demo can embed at most ~100 questions per minute before falling back to lexical retrieval.
+
 **Observed 2026-10-06:** `gemini-3-flash-preview` returned **503 UNAVAILABLE ("high demand")** on two live smoke calls 20 s apart while `gemini-3.5-flash` answered normally. A preview fallback model can be capacity-limited exactly when it is needed; the mock still guarantees an answer, and the adapter classifies this as `upstream_error` (fallback continues). Owner decision pending on whether to keep it as the fallback.
 
 **Decision rule after pre-flight:** if `gemini-3.5-flash` RPD on the demo project is **< 200**, keep the design but

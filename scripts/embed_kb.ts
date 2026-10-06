@@ -45,8 +45,10 @@ const env = parseScriptEnv({
   GEMINI_EMBED_MODEL: z.string().default("gemini-embedding-001"),
 });
 
-// Gemini free tier is rate-limited, so smaller batches with a pause; local Ollama can go faster.
-const defaults = provider.data === "gemini" ? { batch: 50, delay: 1500 } : { batch: 64, delay: 0 };
+// Gemini free tier: embed_content is limited to 100 TEXTS per minute per project (a batch of 50 counts as 50;
+// observed in a 429 on 2026-10-06, quotaId EmbedContentRequestsPerMinutePerUserPerProjectPerModel-FreeTier).
+// So batches of 50 with a 31 s pause. Local Ollama has no limit.
+const defaults = provider.data === "gemini" ? { batch: 50, delay: 31_000 } : { batch: 64, delay: 0 };
 const batchSize = Number(args["batch-size"] ?? defaults.batch);
 const delayMs = Number(args["delay-ms"] ?? defaults.delay);
 if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 100) fail("--batch-size must be 1..100");

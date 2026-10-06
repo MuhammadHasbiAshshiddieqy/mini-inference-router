@@ -119,9 +119,18 @@ The free plan scales to zero after inactivity and wakes on the next connection (
 - Env (build-time): `VITE_GATEWAY_URL=https://<gateway>.vercel.app`, `VITE_DEMO_TENANTS=[...]` (demo keys of `acme`, `globex`, `tiny`).
 - SPA rewrite: `apps/console/vercel.json` → `{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }`.
 
+### Deploy runbook (prepared in Phase 9; needs the owner's Neon and Vercel access)
+
+1. Neon (pooled URL in `DATABASE_URL`): `pnpm db:migrate`, then `PROFILE=cloud pnpm db:seed` with `SEED_KEY_*` set (pin the keys), then `pnpm kb:embed -- --provider gemini --from-cache-only` (loads the committed `data/embeddings/gemini-embedding-001.f32`, **no Gemini calls**). Thresholds come from the committed `data/thresholds.json`.
+2. Vercel gateway project: Root Directory `apps/gateway`, framework Hono, "Include source files outside of the Root Directory" on (it imports `packages/shared` and `data/thresholds.json`). Env: `PROFILE=cloud`, `DATABASE_URL`, `ADMIN_API_KEY`, `CORS_ORIGINS=https://<console>.vercel.app`, `GEMINI_API_KEY` (**router-demo** project). `apps/gateway/vercel.json` sets `regions: ["sin1"]` and `maxDuration: 120` for `src/index.ts`.
+3. Vercel console project: Root Directory `apps/console`, framework Vite, build `pnpm build`, output `dist`; env `VITE_GATEWAY_URL`, `VITE_DEMO_TENANTS` (acme, globex, tiny keys only). `apps/console/vercel.json` rewrites every path to `index.html`.
+4. Deployment Protection off for production; then `BASE=https://<gateway> … EXPECT_PROFILE=cloud ./scripts/smoke.sh` and `curl -N` to confirm incremental streaming.
+
+Open items to confirm on the first deploy: zero-config Hono builds the `.ts`-extension imports and the JSON import of `data/thresholds.json`; the `functions` key matches the detected entry; `@vercel/functions` (`waitUntil`, `attachDatabasePool`) awaits owner approval (docs/11 rule).
+
 ## 3. Smoke test (`scripts/smoke.sh`)
 
-Runs against any base URL. Prints PASS/FAIL per check. Used after every deploy and shown in the video.
+Runs against any base URL and any profile (the primary and fallback backends are read from `/healthz`; set `EXPECT_PROFILE=cloud` for prod). Prints PASS/FAIL per check and exits non-zero on any failure. Used after every deploy and shown in the video. Verified 13/13 PASS against the local profile (Ollama → mock) on 2026-10-06.
 
 ```
 BASE=https://<gateway>.vercel.app KEY=<acme> TINY=<tiny> GLOBEX=<globex> ADMIN=<admin> ./scripts/smoke.sh
