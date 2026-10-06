@@ -93,9 +93,9 @@ Priority: **P0** = must ship. **P1** = should ship. **P2** = only if time remain
 | R9 | Fallback decision recorded and inspectable | P0 | `route_attempts` rows + SSE `route`/`attempt_failed` events + `GET /admin/requests/:id` | console attempt timeline |
 | R10 | At least one real model serves real requests | P0 | Gemini 3.5 Flash (cloud), Ollama (local) | deployed URL, video |
 | R11 | Retrieval over KB slice | P0 | `assistant/retrieve.ts`: dense (pgvector) and hybrid (dense + pg_trgm, RRF); lexical fallback when embedding fails (P1) | retrieval-only eval over 297 queries (doc 07 §2b) + hit@k in the end-to-end eval |
-| R12 | Returns answer, intent, retrieved entries, confidence | P0 | `routes/support.ts` SSE events | contract test |
-| R13 | Handles unusable model output | P0 | `assistant/parse.ts` + escalation | tests with malformed fixtures |
-| R14 | Refuses when confidence is low | P0 | `assistant/confidence.ts` | eval: OOS refusal rate, in-domain false-refusal rate |
+| R12 | Returns answer, intent, retrieved entries, confidence | P0 | `routes/support.ts`, `assistant/answer.ts` (SSE + JSON) | `support.test.ts` (event order, JSON shape), curl transcript |
+| R13 | Handles unusable model output | P0 | `assistant/parse.ts` + escalation | `assistant-pure.test.ts` (all §5 fixtures + live-seen `Line 1:`/`Line 2:`), `support.test.ts` (invalid → escalate → ok; invalid twice → refuse) |
+| R14 | Refuses when confidence is low | P0 | `assistant/confidence.ts`, `data/thresholds.json` (calibrated on dev) | `assistant-pure.test.ts` (every table row); eval: OOS refusal rate, in-domain false-refusal rate |
 | R15 | Console: streaming playground | P0 | `apps/console` Playground | video |
 | R16 | Console shows model, fallback, retrieved, intent, tokens, latency, cost | P0 | Playground side panel | video |
 | R17 | Usage view: requests and cost per tenant, remaining quota | P0 | Usage page via `/admin/usage` | video |

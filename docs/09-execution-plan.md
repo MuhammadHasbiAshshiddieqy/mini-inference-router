@@ -91,9 +91,9 @@ Read: `docs/03` §3–§4.
 
 ## Phase 6: Support assistant
 Read: `docs/05`.
-- [ ] `assistant/retrieve.ts` with modes `dense` | `hybrid` (RRF SQL, doc 05 §2.4) | `lexical_fallback` (on embedding failure or `debug.force_embedding_fail`); ranking separated from gating (doc 05 §2.1).
-- [ ] `intent.ts`, `prompt.ts` (PROMPT_V1), `parse.ts`, `confidence.ts`, `answer.ts` (orchestration incl. escalation), `routes/support.ts`.
-- [ ] `scripts/calibrate.ts` → `data/thresholds.json` with dense `T_oos`/`T_high` per embedding model + `T_trgm_oos` (run for `nomic-embed-text` now; Gemini in Phase 9).
+- [x] `assistant/retrieve.ts` with modes `dense` | `hybrid` (RRF SQL, doc 05 §2.4) | `lexical_fallback` (on embedding failure or `debug.force_embedding_fail`); ranking separated from gating (doc 05 §2.1).
+- [x] `intent.ts`, `prompt.ts` (PROMPT_V1), `parse.ts`, `confidence.ts`, `answer.ts` (orchestration incl. escalation), `routes/support.ts`.
+- [x] `scripts/calibrate.ts` → `data/thresholds.json` with dense `T_oos`/`T_high` per embedding model + `T_trgm_oos` (run for `nomic-embed-text` now; Gemini in Phase 9).
 **Tests:** doc 05 §9 (normalize, retrieve incl. hybrid/gating/lexical fallback, parser fixtures, confidence table, route tests).
 **Verify:** 5 console-free curl runs: in-domain easy, typo, confusable, OOS (pre-gate refusal, 0 LLM calls), injection.
 **Commit:** `feat(assistant): RAG support answer with intent, confidence, refusal`

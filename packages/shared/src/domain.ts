@@ -65,6 +65,7 @@ export const ERROR_CODES = [
   "mid_stream_error", // SSE only: the backend failed after content was sent (no retry)
   "quota_unavailable",
   "embedding_unavailable",
+  "assistant_unavailable", // 503: KB rows or calibrated thresholds missing for the active embedding model
   "internal_error",
 ] as const;
 export const ErrorCodeSchema = z.enum(ERROR_CODES);

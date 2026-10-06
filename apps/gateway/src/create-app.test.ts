@@ -14,7 +14,8 @@ function buildApp() {
     reachable: true,
     models_present: Object.fromEntries(models.map((m) => [m, true])),
   });
-  const app = createApp({ env, logger: createLogger("silent"), getPool, probeOllama });
+  const checkAssistant = async () => ({ ok: true, kb_rows: 1350, pg_trgm: true, problems: [] });
+  const app = createApp({ env, logger: createLogger("silent"), getPool, probeOllama, checkAssistant });
   // Test-only routes to exercise the error middleware.
   app.get("/test/app-error", () => {
     throw new AppError("quota_exceeded", 429, "Token quota exhausted", { remaining: 0 });

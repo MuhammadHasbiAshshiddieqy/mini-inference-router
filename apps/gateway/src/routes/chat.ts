@@ -1,7 +1,6 @@
 import { ChatRequestSchema, type ChatRequest, type ChatResponse, type DoneEvent, type Outcome } from "@mir/shared";
 import { Hono, type Context } from "hono";
 import type { Pool } from "pg";
-import type { Logger } from "pino";
 import type { BackendRegistry } from "../backends/registry.ts";
 import type { ChatTurn, GenerateRequest } from "../backends/types.ts";
 import type { Env } from "../config/env.ts";
@@ -9,7 +8,7 @@ import { admit, settle, type Admission } from "../http/admission.ts";
 import { AppError } from "../http/errors.ts";
 import { openEventStream, type SendEvent } from "../http/sse.ts";
 import type { AppEnv } from "../http/types.ts";
-import { insertAttempt } from "../metering/requests.ts";
+import { recordAttempt } from "../metering/attempts.ts";
 import { estimateTokens } from "../quota/quota.ts";
 import { execute, totals, type AttemptResult, type ExecuteResult } from "../router/execute.ts";
 import { plan, type Plan } from "../router/plan.ts";
@@ -55,29 +54,6 @@ function toGenerateRequest(body: ChatRequest, maxOutputTokens: number): Omit<Gen
     ...(body.tools ? { tools: body.tools } : {}),
     mock: { latencyMs: body.debug?.mock_latency_ms, fail: body.debug?.mock_fail },
   };
-}
-
-async function recordAttempt(pool: Pool, log: Logger, requestId: string, a: AttemptResult): Promise<void> {
-  try {
-    await insertAttempt(pool, {
-      requestId,
-      attemptNo: a.attempt,
-      backendId: a.backendId,
-      model: a.model,
-      reason: a.reason,
-      status: a.status,
-      errorDetail: a.errorDetail,
-      promptTokens: a.usage?.promptTokens ?? null,
-      completionTokens: a.usage?.completionTokens ?? null,
-      thinkingTokens: a.usage?.thinkingTokens ?? null,
-      costUsd: a.costUsd,
-      latencyMs: a.latencyMs,
-      ttftMs: a.ttftMs,
-      startedAt: a.startedAt,
-    });
-  } catch (err) {
-    log.error({ err, attempt: a.attempt }, "failed to record route attempt");
-  }
 }
 
 function outcomeOf(result: ExecuteResult): { outcome: Outcome; errorCode: string | null } {

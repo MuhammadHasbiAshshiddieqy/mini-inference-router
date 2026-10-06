@@ -1,0 +1,37 @@
+{
+  "nomic-embed-text": {
+    "T_oos": 0.668,
+    "T_high": 0.787,
+    "calibration": {
+      "n_in_domain": 270,
+      "n_oos": 15,
+      "in_domain_recall": 0.981,
+      "oos_recall": 1,
+      "in_domain_top1": {
+        "min": 0.575,
+        "p30": 0.788,
+        "median": 0.82
+      },
+      "oos_top1": {
+        "max": 0.654,
+        "median": 0.536
+      },
+      "rule": "T_oos keeps in-domain recall >= 0.98; T_high = p30 of in-domain top-1",
+      "split": "dev + dev_oos",
+      "computed_at": "2026-10-06T11:31:53.708Z"
+    }
+  },
+  "trigram": {
+    "T_trgm_oos": 0.428,
+    "calibration": {
+      "n_in_domain": 270,
+      "n_oos": 15,
+      "in_domain_recall": 0.952,
+      "oos_recall": 1,
+      "rule": "T_trgm_oos keeps in-domain recall >= 0.95 (lexical fallback only)",
+      "split": "dev + dev_oos",
+      "kb_embedding_model": "nomic-embed-text",
+      "computed_at": "2026-10-06T11:31:53.708Z"
+    }
+  }
+}

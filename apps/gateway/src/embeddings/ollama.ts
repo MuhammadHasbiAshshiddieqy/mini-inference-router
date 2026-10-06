@@ -33,6 +33,11 @@ export function createOllamaEmbedder({ host, model, timeoutMs, fetchImpl = fetch
         texts.map((t) => `search_document: ${t}`),
         signal,
       ),
+    embedQueries: (texts, signal) =>
+      embed(
+        texts.map((t) => `search_query: ${t}`),
+        signal,
+      ),
     embedQuery: async (text, signal) => {
       const [vector] = await embed([`search_query: ${text}`], signal);
       if (!vector) throw new EmbeddingError(`ollama ${model}: empty response`);

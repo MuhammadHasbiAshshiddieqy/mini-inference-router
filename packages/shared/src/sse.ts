@@ -124,3 +124,4 @@ export function parseSseEvent(name: string, data: unknown): ParsedSseEvent {
 }
 
 export type DoneEvent = z.infer<typeof DoneEventSchema>;
+export type IntentEventData = z.infer<typeof IntentEventSchema>;

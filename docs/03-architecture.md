@@ -220,6 +220,7 @@ Outcomes (`requests.outcome`): `ok`, `ok_after_fallback`, `refused`, `quota_exce
 | — | `mid_stream_error` | SSE `error` event only: the serving backend failed after content was sent; no retry, `done.outcome = partial_error` |
 | 503 | `quota_unavailable` | DB unreachable during reservation (fail closed) |
 | 503 | `embedding_unavailable` | query embedding failed **and** lexical fallback is disabled (`RETRIEVAL_LEXICAL_FALLBACK=false`); normally the request degrades to `lexical_fallback` instead |
+| 503 | `assistant_unavailable` | support only: no KB rows or no calibrated thresholds for the active embedding model (checked before the reservation) |
 | 500 | `internal_error` | anything else (logged with stack, generic message to client) |
 
 Errors that occur before the SSE stream opens are plain JSON with the status above. After the stream opens, the status is already 200, so errors become `error` + `done` events.

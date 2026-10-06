@@ -111,10 +111,10 @@ Owner only (accounts and keys; Claude cannot do these):
 - **Commit:** `feat(chat): streaming chat endpoint`
 
 ## Phase 6 — Support assistant (docs/05)
-- [ ] `assistant/retrieve.ts`: `dense`, `hybrid` (RRF SQL), `lexical_fallback` (on embedding failure after 1 retry or `force_embedding_fail`); gating always on dense cosine
-- [ ] `intent.ts` (dense-weighted kNN, vote_share), `prompt.ts` (`PROMPT_V1`), `parse.ts` (HEADER → BODY state machine), `confidence.ts` (decision table), `answer.ts` (escalation), `routes/support.ts`
-- [ ] Startup checks: KB rows for active embedding model + `pg_trgm` installed
-- [ ] `scripts/calibrate.ts` → `data/thresholds.json` (`T_oos`, `T_high` per model; `T_trgm_oos` under `trigram`) for `nomic-embed-text`
+- [x] `assistant/retrieve.ts`: `dense`, `hybrid` (RRF SQL), `lexical_fallback` (on embedding failure after 1 retry or `force_embedding_fail`); gating always on dense cosine
+- [x] `intent.ts` (dense-weighted kNN, vote_share), `prompt.ts` (`PROMPT_V1`), `parse.ts` (HEADER → BODY state machine), `confidence.ts` (decision table), `answer.ts` (escalation), `routes/support.ts`
+- [x] Startup checks: KB rows for active embedding model + `pg_trgm` installed
+- [x] `scripts/calibrate.ts` → `data/thresholds.json` (`T_oos`, `T_high` per model; `T_trgm_oos` under `trigram`) for `nomic-embed-text`
 - **Tests:** `normalize`, `retrieve` (hybrid typo, dense-max gating, lexical cap at medium, "order a pizza" pre-gated), `parse` (all fixtures), `confidence` (every row), `support.route` (event order, pre-gate = 0 backend calls + 0 tokens, invalid → escalate → ok, invalid twice → `unusable_model_output`, disagreement, forced-fail → mock)
 - **Verify:** curl runs: easy, typo, confusable, OOS (no LLM call), injection
 - **Commit:** `feat(assistant): RAG support answer with intent, confidence, refusal`

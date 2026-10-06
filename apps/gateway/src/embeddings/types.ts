@@ -10,6 +10,8 @@ export interface Embedder {
   embedDocuments(texts: string[], signal?: AbortSignal): Promise<number[][]>;
   // A customer message at request time.
   embedQuery(text: string, signal?: AbortSignal): Promise<number[]>;
+  // Many queries in one call (calibration and retrieval eval), same task type/prefix as embedQuery.
+  embedQueries(texts: string[], signal?: AbortSignal): Promise<number[][]>;
 }
 
 export class EmbeddingError extends Error {

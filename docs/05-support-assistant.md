@@ -71,7 +71,7 @@ ORDER BY f.rrf DESC LIMIT $5;               -- $4 = RRF_K (60), $5 = k (5)
 
 - `$3` = normalized query. `similarity()` comes from `pg_trgm` (character trigrams, tolerant to typos such as "cancelation"/"oorder").
 - 1,350 rows per model: a sequential scan is ~ms. A GIN trigram index is optional (`CREATE INDEX … USING gin (instruction_norm gin_trgm_ops)`).
-- **Pre-gate always uses the max `dense_sim`** among candidates (the true dense top-1 is always in the fused set, since dense rank 1 always gets RRF credit).
+- **Pre-gate always uses the true dense top-1.** The first draft assumed the dense rank-1 entry always survives RRF into the fused top-k; that is not guaranteed (several entries ranking well in both lists can push it out). The hybrid SQL therefore also returns `dense_top1 = max(sim)` from the `dense` CTE, and the gate uses it (tested in `support.test.ts`).
 
 ### 2.5 Lexical fallback (embedding unavailable)
 
@@ -154,6 +154,7 @@ States: `HEADER` → `BODY`.
 - In `BODY`, forward text chunks as they arrive (after the confidence decision below).
 
 Fixtures for tests: valid; bold header; missing `---`; unknown label; JSON instead of text; empty output; only header;
+Tolerances added from live runs (2026-10-06): Gemma 4 E2B echoes the prompt's format lines, `Line 1: INTENT: x` and `Line 2: ---`; both prefixes are accepted (the label must still be an exact enum value). Before this, every such answer cost an escalation.
 header + `out_of_scope` + extra text (ignore the extra text, refuse); very long preamble ("Sure! Here is…").
 
 ## 6. Confidence and refusal (`assistant/confidence.ts`, pure)
@@ -196,6 +197,9 @@ Refusals still return the retrieved entries and signals (useful for the reviewer
   that file (env overrides allowed); `T_trgm_oos` is stored under the key `trigram`. Print a small table (threshold, in-domain recall, OOS recall).
 - Thresholds do not depend on `RETRIEVAL_MODE`, because gating is always dense. That is the point of §2.1.
 - Do not tune on `eval*.jsonl`.
+- Built: `scripts/calibrate.ts` (math in `scripts/lib/calibration.ts`). Result for `nomic-embed-text` (2026-10-06, dev 270 + dev_oos 15): **T_oos = 0.668** (in-domain recall 0.981, OOS recall 1.000), **T_high = 0.787**, **T_trgm_oos = 0.428** (in-domain recall 0.952, OOS recall 1.000). The margin is thin: OOS dense top-1 max 0.654 vs in-domain min 0.575.
+- Readiness: `/healthz` returns 503 `degraded` (with the fixing command) when the active embedding model has no KB rows or thresholds, or `pg_trgm` is missing; `/v1/support/answer` then returns 503 `assistant_unavailable` before any reservation.
+- Implementation notes (`assistant/answer.ts`): the `intent` event is sent when the first body text is released (the commit point), so a header-phase fallback never produces two intent events. An attempt stopped for escalation or refusal after a valid header is recorded with status `ok` and an `error_detail` explaining the stop (the backend worked; the stop was a quality decision). Known limitation seen live: a heavily misspelt query ("how do i cancle my oder plz", dense top-1 0.52) is pre-refused, because gating is dense by design; measured in the retrieval eval.
 
 ## 8. Output to client
 

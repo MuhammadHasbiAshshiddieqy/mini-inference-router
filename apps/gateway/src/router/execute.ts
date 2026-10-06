@@ -49,6 +49,9 @@ export type ExecuteHooks = {
   // Called once per attempt (success or failure), e.g. to insert a route_attempts row.
   onAttemptDone?: (a: AttemptResult) => void | Promise<void>;
   onChunk: (chunk: ContentChunk, ctx: { commit: () => void; backend: BackendSpec }) => void | Promise<void>;
+  // Called when a stream ends normally, before the attempt is recorded as ok. May throw like onChunk
+  // (e.g. the support parser rejects output that ended inside the INTENT header).
+  onEnd?: (ctx: { backend: BackendSpec }) => void | Promise<void>;
 };
 
 export type ExecuteInput = {
@@ -228,6 +231,13 @@ export async function execute(input: ExecuteInput): Promise<ExecuteResult> {
           throw err;
         }
       }
+      try {
+        await input.hooks.onEnd?.({ backend: spec });
+      } catch (err) {
+        if (err instanceof BackendError && !err.retryable) consumerStop = err;
+        else consumerFailure = err;
+        throw err;
+      }
 
       const attempt: AttemptResult = {
         ...base,
@@ -259,7 +269,11 @@ export async function execute(input: ExecuteInput): Promise<ExecuteResult> {
       }
       if (consumerStop) {
         await record(failed(consumerStop.status, consumerStop.message));
-        return finish("stopped", null, null, { status: consumerStop.status, message: consumerStop.message });
+        // The backend did produce output (its tokens are billed), so it is reported as the one that served.
+        return finish("stopped", spec, firstContentAt === null ? null : Math.round(firstContentAt - runStart), {
+          status: consumerStop.status,
+          message: consumerStop.message,
+        });
       }
       if (consumerFailure !== undefined) {
         const message = consumerFailure instanceof Error ? consumerFailure.message : String(consumerFailure);

@@ -45,6 +45,7 @@ export function createGeminiEmbedder({ apiKey, model, timeoutMs, embedContent }:
     provider: "gemini",
     model,
     embedDocuments: (texts, signal) => embed(texts, "RETRIEVAL_DOCUMENT", signal),
+    embedQueries: (texts, signal) => embed(texts, "RETRIEVAL_QUERY", signal),
     embedQuery: async (text, signal) => {
       const [vector] = await embed([text], "RETRIEVAL_QUERY", signal);
       if (!vector) throw new EmbeddingError(`gemini ${model}: empty response`);
