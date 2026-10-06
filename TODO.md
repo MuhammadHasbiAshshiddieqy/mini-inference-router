@@ -61,12 +61,12 @@ Owner only (accounts and keys; Claude cannot do these):
 - **Commit:** `chore: bootstrap monorepo`
 
 ## Phase 1 — Dataset split (docs/02)
-- [ ] `scripts/prepare_data.py` + `scripts/requirements.txt` (`datasets`, `huggingface_hub`)
+- [x] `scripts/prepare_data.py` + `scripts/requirements.txt` (`datasets`, `huggingface_hub`)
   - seed 42, shuffle within intent, eval first (first row with flags in `ZQKWE`), then dev, then kb
   - normalized-instruction dedup across splits; ids `bitext-<index>`
   - asserts: 27 intents, exact counts per intent, no overlap; summary table
   - `split_manifest.json` incl. dataset revision sha
-- [ ] Hand-write `data/eval_oos.jsonl` (5, fixed list in doc 02 §5) and `data/dev_oos.jsonl` (15, no duplicates)
+- [x] Hand-write `data/eval_oos.jsonl` (5, fixed list in doc 02 §5) and `data/dev_oos.jsonl` (15, no duplicates)
 - **Verify:** counts 1350 / 270 / 27; no overlap; print 3 sample eval rows
 - **Commit:** `feat(data): stratified KB/dev/eval split`
 

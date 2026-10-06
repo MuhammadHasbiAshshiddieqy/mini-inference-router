@@ -1,0 +1,17 @@
+[
+  { "input": "Cancel purchase {{Order Number}}", "expected": "cancel purchase" },
+  { "input": "cancel order {{Order Number}}", "expected": "cancel order" },
+  { "input": "  How do I   track my REFUND?? ", "expected": "how do i track my refund" },
+  { "input": "I can't log in!!!", "expected": "i can t log in" },
+  { "input": "where's my order #12345?", "expected": "where s my order 12345" },
+  { "input": "help w/ {{Account Type}} acct", "expected": "help w acct" },
+  { "input": "need to change {{Order Number}}, {{Delivery City}}.", "expected": "need to change" },
+  { "input": "{{Order Number}}", "expected": "" },
+  { "input": "", "expected": "" },
+  { "input": "ordr cancelation pls", "expected": "ordr cancelation pls" },
+  { "input": "snake_case_word and kebab-case-word", "expected": "snake case word and kebab case word" },
+  { "input": "line one\nline two\tend", "expected": "line one line two end" },
+  { "input": "Café — crème brûlée", "expected": "café crème brûlée" },
+  { "input": "price: $9.99 (USD)", "expected": "price 9 99 usd" },
+  { "input": "{{a}}{{b}}x{{c}}", "expected": "x" }
+]

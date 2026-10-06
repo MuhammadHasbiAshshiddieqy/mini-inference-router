@@ -47,9 +47,9 @@ Read: `CLAUDE.md`, `docs/03` §8.
 
 ## Phase 1: Dataset split
 Read: `docs/02`.
-- [ ] `scripts/prepare_data.py` + `scripts/requirements.txt` exactly per spec. Run it.
-- [ ] Hand-write `data/eval_oos.jsonl` (5) and `data/dev_oos.jsonl` (15).
-- [ ] Commit `data/*.jsonl` + `split_manifest.json`.
+- [x] `scripts/prepare_data.py` + `scripts/requirements.txt` exactly per spec. Run it.
+- [x] Hand-write `data/eval_oos.jsonl` (5) and `data/dev_oos.jsonl` (15).
+- [x] Commit `data/*.jsonl` + `split_manifest.json`.
 **Verify:** script assertions pass; counts 1350/270/27; no normalized overlap; print 3 sample eval rows.
 **Commit:** `feat(data): stratified KB/dev/eval split`
 

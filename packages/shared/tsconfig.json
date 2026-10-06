@@ -1,4 +1,6 @@
 {
+  // Runtime code is shared with the browser console, so Node types are not available here.
   "extends": "../../tsconfig.base.json",
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts"]
 }

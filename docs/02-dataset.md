@@ -45,7 +45,7 @@ Many instructions are near-duplicates (e.g. "cancel purchase {{Order Number}}" v
 A random held-out row almost always has a near-twin in the KB, so kNN intent accuracy will look very high (likely 95%+).
 Mitigations:
 
-1. Deduplicate on a **normalized instruction** across splits. Normalize as: lowercase, replace `{{...}}` with `<ent>`, strip punctuation, collapse whitespace.
+1. Deduplicate on a **normalized instruction** across splits, using the same `normalize()` as runtime (doc 05 §2.2): lowercase, replace each `{{...}}` with a space, replace every character that is not a Unicode letter, digit or whitespace (including `_`) with a space, collapse whitespace, trim. Shared fixtures: `packages/shared/src/normalize.fixtures.json` (the Python script checks them at start). An earlier draft replaced placeholders with `<ent>`; that was dropped so Python and TS stay identical and real user queries (which contain no placeholders) do not gain a spurious "ent" token for trigram matching.
 2. Choose eval cases that prefer **hard flags** (Z, Q, K, W, E) and include the confusable intent pairs:
    `get_refund`/`track_refund`/`check_refund_policy`, `check_invoice`/`get_invoice`,
    `contact_customer_service`/`contact_human_agent`, `change_shipping_address`/`set_up_shipping_address`,
@@ -68,6 +68,7 @@ Total reported eval = 32 cases ("around 30").
 Rules:
 - `seed = 42`. Shuffle **within each intent** with `random.Random(seed)`.
 - Assignment order per intent: pick `eval` first (deterministic hard-case selection: first shuffled row whose flags contain any of `ZQKWE`, otherwise the first row), then `dev`, then `kb`. Skip any row whose normalized instruction already exists in an earlier-assigned split.
+  Implemented as three passes (all intents for `eval`, then all for `dev`, then all for `kb`), so "earlier split" holds across intents too. One `random.Random(seed)` shuffles each intent in sorted intent order. The dataset is loaded at the pinned revision sha recorded in the manifest.
 - Keep the row's original index as `id` (e.g. `"bitext-01234"`).
 - Write JSONL with fields: `id, instruction, response, intent, category, flags`.
 - Write `data/split_manifest.json`: dataset name, **dataset revision sha** (via `huggingface_hub.HfApi().dataset_info(...).sha`), seed, counts per split per intent, created_at, normalization function description.
@@ -75,7 +76,9 @@ Rules:
 
 ### `scripts/prepare_data.py` (spec)
 
-- Python ≥ 3.10, dependencies in `scripts/requirements.txt`: `datasets`, `huggingface_hub`.
+- Python ≥ 3.10, dependencies in `scripts/requirements.txt`: `datasets`, `huggingface_hub` (pinned to the versions that produced the committed files).
+  Setup used: `uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r scripts/requirements.txt`, then `.venv/bin/python scripts/prepare_data.py …` (plain `python3 -m venv` works too).
+- Result (2026-10-06, revision `430d1a89bd93`): 1350 / 270 / 27, all 27 eval rows carry a hard flag, 11 KB candidates skipped as duplicates of an earlier split. Re-running produces byte-identical JSONL files.
 - CLI: `python scripts/prepare_data.py --out data --seed 42 --kb-per-intent 50 --dev-per-intent 10`.
 - Asserts: 27 intents present, each split has the expected count per intent, no normalized-instruction overlap between splits (fail loudly otherwise).
 - Prints a summary table at the end.

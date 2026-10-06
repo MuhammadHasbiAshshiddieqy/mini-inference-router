@@ -1,0 +1,8 @@
+{
+  // Tests run under Node (Vitest) and may read committed files from data/.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

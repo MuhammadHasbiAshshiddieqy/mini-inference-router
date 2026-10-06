@@ -1,0 +1,4 @@
+# One-off data prep only (scripts/prepare_data.py). Nothing at runtime uses Python.
+# Python >= 3.10. Versions as used to produce the committed data/ files.
+datasets==5.1.0
+huggingface_hub==2.1.1
