@@ -1,4 +1,10 @@
-# Local stack (docs/08 §1). Phase 2: Postgres + pgvector only; gateway, console and Ollama services come in Phase 10.
+# Local stack (docs/08 §1). Three ways to run:
+#   A. full Docker (Ollama in a container, CPU):  docker compose --profile ollama up --build
+#   B. Docker + native Ollama on the Mac (Metal): DOCKER_OLLAMA_URL=http://host.docker.internal:11434 \
+#                                                  DOCKER_OLLAMA_CHAT_MODEL=gemma4:e2b-mlx docker compose up --build
+#   C. no Docker: pnpm dev with a local Postgres and native Ollama (see README)
+# DOCKER_* variables are separate from OLLAMA_* in .env on purpose: .env is for native dev (localhost), and
+# compose reads .env for substitution, which would otherwise point the containers at their own localhost.
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -7,4 +13,65 @@ services:
     healthcheck: { test: ["CMD", "pg_isready", "-U", "postgres"], interval: 3s, retries: 20 }
     volumes: [pgdata:/var/lib/postgresql/data]
 
-volumes: { pgdata: {} }
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    volumes: [ollama:/root/.ollama]
+    healthcheck: { test: ["CMD", "ollama", "list"], interval: 5s, retries: 30 }
+
+  ollama-pull: # one-shot: pulls the container models into the ollama volume (several GB on first run)
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    depends_on: { ollama: { condition: service_healthy } }
+    environment: { OLLAMA_HOST: "http://ollama:11434" }
+    entrypoint:
+      ["sh", "-c", "ollama pull ${DOCKER_OLLAMA_CHAT_MODEL:-gemma4:e2b-it-qat} && ollama pull nomic-embed-text"]
+    volumes: [ollama:/root/.ollama]
+
+  migrate: # one-shot: migrations + tenants + KB from the committed nomic-embed-text cache (no Ollama call)
+    build: { context: ., dockerfile: apps/gateway/Dockerfile, target: tools }
+    depends_on: { postgres: { condition: service_healthy } }
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/router
+      PROFILE: local
+      SEED_KEY_ACME: ${SEED_KEY_ACME:-}
+      SEED_KEY_GLOBEX: ${SEED_KEY_GLOBEX:-}
+      SEED_KEY_TINY: ${SEED_KEY_TINY:-}
+      SEED_KEY_EVAL: ${SEED_KEY_EVAL:-}
+      SEED_KEY_REVIEWER: ${SEED_KEY_REVIEWER:-}
+    command: ["sh", "-c", "pnpm db:migrate && pnpm db:seed && pnpm kb:embed -- --provider ollama --from-cache-only"]
+
+  gateway:
+    build: { context: ., dockerfile: apps/gateway/Dockerfile, target: runtime }
+    depends_on:
+      postgres: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    environment:
+      PROFILE: local
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/router
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-local-admin}
+      CORS_ORIGINS: http://localhost:5173
+      OLLAMA_URL: ${DOCKER_OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_CHAT_MODEL: ${DOCKER_OLLAMA_CHAT_MODEL:-gemma4:e2b-it-qat}
+      OLLAMA_THINK: "false"
+      OLLAMA_EMBED_MODEL: nomic-embed-text
+      # CPU inference in a container is slow: generous timeouts (docs/12 §4).
+      OLLAMA_TTFT_TIMEOUT_MS: ${DOCKER_OLLAMA_TTFT_TIMEOUT_MS:-60000}
+      OLLAMA_TOTAL_TIMEOUT_MS: ${DOCKER_OLLAMA_TOTAL_TIMEOUT_MS:-180000}
+      EMBED_TIMEOUT_MS: "30000"
+    extra_hosts: ["host.docker.internal:host-gateway"] # mode B on Linux too
+    ports: ["8787:8787"]
+
+  console:
+    build:
+      context: .
+      dockerfile: apps/console/Dockerfile
+      args:
+        VITE_GATEWAY_URL: http://localhost:8787
+        VITE_DEMO_TENANTS: ${VITE_DEMO_TENANTS:-}
+        SEED_KEY_ACME: ${SEED_KEY_ACME:-}
+        SEED_KEY_GLOBEX: ${SEED_KEY_GLOBEX:-}
+        SEED_KEY_TINY: ${SEED_KEY_TINY:-}
+    ports: ["5173:80"]
+
+volumes: { pgdata: {}, ollama: {} }

@@ -5,7 +5,7 @@ Three ways to run, one codebase:
 | Mode | Who | LLM | DB | Command / URL |
 |---|---|---|---|---|
 | **A. Full Docker** | reviewer with only Docker | Ollama **container** (CPU, small model) + mock | Postgres+pgvector container | `docker compose --profile ollama up --build` |
-| **B. Docker + native Ollama (Mac)** | owner (dev, demo recording) | Ollama on host (Metal GPU) + mock | container | `OLLAMA_URL=http://host.docker.internal:11434 OLLAMA_CHAT_MODEL=gemma4:e2b-mlx docker compose up --build` |
+| **B. Docker + native Ollama (Mac)** | owner (dev, demo recording) | Ollama on host (Metal GPU) + mock | container | `DOCKER_OLLAMA_URL=http://host.docker.internal:11434 DOCKER_OLLAMA_CHAT_MODEL=gemma4:e2b-mlx docker compose up --build` |
 | **C. Cloud** | everyone | Gemini 3.5 Flash → Gemini 3 Flash → mock | Neon (Singapore) | Vercel URLs |
 
 Also possible without Docker: `pnpm dev` with a local Postgres and native Ollama.
@@ -80,9 +80,16 @@ Notes:
 - The demo keys for local mode come from `.env` (`SEED_KEY_*`). If they are empty, seed generates keys and prints them once. The console in Docker gets `VITE_DEMO_TENANTS` at build time from `.env`.
 - `docker-compose.gpu.yml` (optional): adds `deploy.resources.reservations.devices: [{driver: nvidia, count: all, capabilities: [gpu]}]` to `ollama`. Documented, not tested.
 
+### As built (Phase 10)
+
+- Compose uses **`DOCKER_OLLAMA_URL` / `DOCKER_OLLAMA_CHAT_MODEL`** (and `DOCKER_OLLAMA_*_TIMEOUT_MS`), not `OLLAMA_*`: compose reads the repo `.env` for variable substitution, and that file holds the native-dev values (`OLLAMA_URL=http://localhost:11434`), which would point the containers at their own localhost.
+- **No compile stage.** The gateway image runs the TypeScript sources with Node's built-in type stripping (Node ≥ 22.18), exactly as local dev does; targets are `tools` (full workspace for `migrate`) and `runtime` (gateway production deps, non-root, `HEALTHCHECK` on `/healthz`).
+- The console image derives `VITE_DEMO_TENANTS` from the `SEED_KEY_ACME/GLOBEX/TINY` build args when it is not given; the admin and reviewer keys are never bundled (checked: 0 occurrences in the built JS).
+- Verified 2026-10-06 **from a clean clone**: mode B (`gemma4:e2b-mlx` on the host): migrate (migrations, seed, 1,350 KB rows from the committed cache with no Ollama call) → gateway healthy → console served with SPA fallback → `scripts/smoke.sh` **13/13 PASS** → playground screenshot `docs/img/docker-mode-b.png`. Mode A wiring (Ollama container, models not yet pulled): `/healthz` reports `reachable: true, models_present: false`, the gateway logs the `ollama pull` fix, embedding falls back to lexical and generation to the mock (`ok_after_fallback`), as designed. The multi-GB model pull of mode A (`ollama-pull`) was not run on the owner's Mac.
+
 ### Dockerfiles
 
-- `apps/gateway/Dockerfile`: multi-stage on `node:22-alpine` with corepack pnpm. Stage `deps` → `build` (tsc/tsup) → `tools` (full workspace for scripts) → `runtime` (prod deps + dist, non-root user, `CMD ["node","dist/local.js"]`, `HEALTHCHECK` on `/healthz`).
+- `apps/gateway/Dockerfile`: multi-stage on `node:22-alpine` with corepack pnpm: `base` (manifests) → `tools` (full workspace for scripts) / `runtime` (gateway prod deps + sources, non-root user, `CMD ["node","apps/gateway/src/local.ts"]`, `HEALTHCHECK` on `/healthz`). No `tsc` build stage (see above).
 - `apps/console/Dockerfile`: build with Vite (`ARG VITE_GATEWAY_URL`, `ARG VITE_DEMO_TENANTS`) → serve `dist/` with `nginx:alpine` and an SPA fallback (`try_files $uri /index.html`).
 
 ## 2. Cloud: Neon + Vercel

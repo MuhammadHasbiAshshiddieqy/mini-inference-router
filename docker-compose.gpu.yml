@@ -1,0 +1,8 @@
+# Optional NVIDIA GPU for the Ollama container (documented, not tested: docs/08 §1).
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml --profile ollama up --build
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices: [{ driver: nvidia, count: all, capabilities: [gpu] }]

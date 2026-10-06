@@ -123,7 +123,7 @@ Read: `docs/08` §2–§3.
 
 ## Phase 10: Docker full stack
 Read: `docs/08` §1.
-- [ ] Dockerfiles (gateway multi-stage with `tools` + `runtime` targets; console nginx), `migrate` one-shot, `ollama` + `ollama-pull` profile, `docker-compose.gpu.yml`.
+- [x] Dockerfiles (gateway multi-stage with `tools` + `runtime` targets; console nginx), `migrate` one-shot, `ollama` + `ollama-pull` profile, `docker-compose.gpu.yml`.
 **Verify:** from a clean clone: `docker compose --profile ollama up --build` → console at :5173 answers (after model pull). Mode B works with host Ollama.
 **Commit:** `feat(docker): one-command local stack`
 

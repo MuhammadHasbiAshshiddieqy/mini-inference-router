@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/coverage
+.git
+.env
+.env.*
+!.env.example
+.venv
+**/__pycache__
+.DS_Store
+docs/img
+.claude

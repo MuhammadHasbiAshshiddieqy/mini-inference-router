@@ -145,10 +145,11 @@ Owner only (accounts and keys; Claude cannot do these):
 - **Commit:** `feat(deploy): cloud profile on Vercel + Neon, eval results`
 
 ## Phase 10 — Docker full stack (docs/08 §1)
-- [ ] `apps/gateway/Dockerfile` (deps → build → tools → runtime, non-root, HEALTHCHECK); `apps/console/Dockerfile` (nginx SPA)
-- [ ] Compose: `migrate` one-shot, `ollama` + `ollama-pull` profile, `gateway`, `console`; `docker-compose.gpu.yml`
+- [x] `apps/gateway/Dockerfile` (deps → build → tools → runtime, non-root, HEALTHCHECK); `apps/console/Dockerfile` (nginx SPA)
+- [x] Compose: `migrate` one-shot, `ollama` + `ollama-pull` profile, `gateway`, `console`; `docker-compose.gpu.yml`
 - **Verify:** clean clone → `docker compose --profile ollama up --build` → console :5173 answers; mode B with host Ollama
 - **Commit:** `feat(docker): one-command local stack`
+- [ ] Optional: full mode A run (`docker compose --profile ollama up --build`, pulls gemma4:e2b-it-qat + nomic into the Docker volume, several GB) — wiring verified without the pull; ask the owner before downloading
 
 ## Phase 11 — Report + README (docs/10)
 - [ ] `docs/REPORT.md` from template with real numbers; "What I cut" complete; trade-offs; tech-choices summary
