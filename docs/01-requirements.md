@@ -104,7 +104,7 @@ Priority: **P0** = must ship. **P1** = should ship. **P2** = only if time remain
 | R20 | Two configurations compared | P0 | e.g. Gemini 3.5 Flash vs Ollama, or thinking minimal vs low | comparison table in report |
 | R21 | Input validation, timeouts, bad output handled | P0 | Zod, AbortSignal, parse.ts | tests |
 | R22 | Deployed URL | P0 | Vercel (gateway + console) + Neon | README link, smoke script |
-| R23 | Technical report + "What I cut" | P0 | `docs/REPORT.md` | — |
+| R23 | Technical report + "What I cut" | P0 | `docs/REPORT.md` | report with measured numbers (local profile); cloud numbers, URLs and video filled after deploy |
 | R24 | Video demo | P0 | recorded from deployed or local | link in README |
 
 ## 4. Non-functional targets (our own, used in the report)

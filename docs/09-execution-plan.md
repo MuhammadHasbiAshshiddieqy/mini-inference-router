@@ -129,8 +129,9 @@ Read: `docs/08` §1.
 
 ## Phase 11: Report + README
 Read: `docs/10`.
-- [ ] `docs/REPORT.md` from the template with real numbers; "What I cut" complete; trade-offs honest.
-- [ ] `README.md`: what it is, live URLs + demo keys, 3 ways to run, architecture diagram, API examples (curl), eval summary table, link to the report and video, dataset license.
+- [x] `docs/REPORT.md` from the template with real numbers; "What I cut" complete; trade-offs honest.
+- [x] `README.md`: what it is, live URLs + demo keys, 3 ways to run, architecture diagram, API examples (curl), eval summary table, link to the report and video, dataset license.
+  *(2026-10-06: written with measured local numbers; URLs, demo keys, video and the cloud config A column are marked ⏳ until Phase 9 completes.)*
 **Commit:** `docs: technical report and README`
 
 ## Phase 12: Video + submit

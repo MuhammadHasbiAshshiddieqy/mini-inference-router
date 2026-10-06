@@ -71,6 +71,8 @@ Short version of docs/11-tech-decisions.md §12 (the "not used" table), with a l
 | Charging embedding tokens to quota | Negligible cost; keeps the quota model simple | Add an embedding usage line to metering |
 | In-memory circuit breaker (docs/04 §4 rule 4, P2) | Per-instance state only helps warm serverless instances; per-request fallback with TTFT/total timeouts already moves past a failing backend, and every skip would need its own attempt row | Breaker state in Postgres keyed by backend id, recorded as `skipped_circuit_open` |
 | LLM-as-judge answer metric (docs/07 §3, P1) | First item of the cut order: it spends free-tier quota on every case and a Gemini judge would grade a Gemini answer (self-preference bias). Semantic similarity with one fixed scorer is kept | A judge from a different provider with a fixed rubric, run on a sample |
+| Retrieval-only eval on `gemini-embedding-001` | The free tier allows 1,000 embedded texts per day per project; the quota went to the KB build | `pnpm eval:retrieval -- --provider gemini` on a fresh quota day |
+| Full Docker mode A run on the owner's Mac | Pulls several GB into a Docker volume; the wiring was verified without the pull and mode B ran end to end | `docker compose --profile ollama up --build` |
 | *(add actual cuts made during the build)* | | |
 
 ## Part C: Trade-offs to state explicitly

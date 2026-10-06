@@ -152,9 +152,10 @@ Owner only (accounts and keys; Claude cannot do these):
 - [ ] Optional: full mode A run (`docker compose --profile ollama up --build`, pulls gemma4:e2b-it-qat + nomic into the Docker volume, several GB) — wiring verified without the pull; ask the owner before downloading
 
 ## Phase 11 — Report + README (docs/10)
-- [ ] `docs/REPORT.md` from template with real numbers; "What I cut" complete; trade-offs; tech-choices summary
-- [ ] `README.md`: live URLs + demo keys, 3 ways to run, diagram, curl examples, eval table, report + video links, dataset license (CDLA-Sharing 1.0), "first request may be slow" note, Docker ≥ 8 GB note
+- [x] `docs/REPORT.md` from template with real numbers; "What I cut" complete; trade-offs; tech-choices summary
+- [x] `README.md`: live URLs + demo keys, 3 ways to run, diagram, curl examples, eval table, report + video links, dataset license (CDLA-Sharing 1.0), "first request may be slow" note, Docker ≥ 8 GB note
 - **Commit:** `docs: technical report and README`
+- [ ] After deploy: fill REPORT/README placeholders (⏳): live URLs, public demo keys, video link, config A column, gemini-embedding-001 thresholds, eval:compare A vs B
 
 ## Phase 12 — Video + submit
 - [ ] `db:seed --reset-usage` before recording; record per `docs/10` Part D (6–8 min); upload unlisted; link in README
