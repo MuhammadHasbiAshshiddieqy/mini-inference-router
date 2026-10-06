@@ -18,28 +18,35 @@ no new dependency without a row in `docs/11` and owner approval · every cut log
 
 ---
 
-## Pre-flight (owner, manual)
+## Pre-flight
 
-- [ ] GitHub repo created and remote linked (`origin` = `MuhammadHasbiAshshiddieqy/mini-inference-router`) ✅ remote added, repo still empty
-- [ ] Two Google AI Studio projects: `router-demo` (Vercel) and `router-eval` (eval + embedding builds)
-- [ ] Confirm model IDs on free tier: `gemini-3.5-flash`, `gemini-3-flash-preview`, embedding model. Docs check 2026-10-06: chat IDs confirmed; embedding is ambiguous (models page lists `gemini-embedding-001` + `gemini-embedding-2-preview`, embeddings page names `gemini-embedding-2`) → decide in Phase 2
-- [ ] Record actual RPM / RPD per model per project in `docs/12` §3; apply the decision rule (RPD < 200 → smaller SPA quotas, eval only on eval project, record video right after 14:00 WIB reset)
-- [ ] Neon project (Singapore, Postgres only), pooled connection string saved
-- [ ] Vercel account linked to GitHub
-- [ ] Docker Desktop with ≥ 8 GB memory
-- [ ] Ollama: `ollama --version`, `ollama list` (expect `gemma4:e2b-mlx`, `nomic-embed-text`), `ollama show gemma4:e2b-mlx` (tools, thinking), `ollama pull gemma4:e2b-it-qat`
-- [ ] Python 3.10+ available (**found 3.9.6** on 2026-10-06; Phase 1 needs ≥ 3.10)
+Done by Claude (2026-10-06):
+- [x] GitHub repo exists (public, still empty) and `origin` is linked
+- [x] Docker Desktop memory ≈ 8 GB (VM reports 7.75 GiB), 11 CPUs, Engine 29.6.2
+- [x] Ollama 0.32.5 running; `gemma4:e2b-mlx` (completion, tools, thinking; 5.2B, 128K ctx) and `nomic-embed-text` present
+- [x] Container model `gemma4:e2b-it-qat` is not needed on the Mac: Docker's `ollama-pull` service fetches it into its own volume; tested in Phase 10
+- [x] Python ≥ 3.10 available: Homebrew 3.14 and uv 3.12 (`/usr/bin/python3` is 3.9 → call `python3.12` or `uv run` explicitly)
 - [x] pnpm installed (12.9.1, global via npm; Node 26 ships without corepack)
 
-## External facts to verify before coding (docs/12 §7 "remaining unknowns")
+Owner only (accounts and keys; Claude cannot do these):
+- [ ] Two Google AI Studio projects: `router-demo` (Vercel) and `router-eval` (eval + embedding builds); put the eval key in `.env` as `GEMINI_API_KEY`
+- [ ] Confirm in AI Studio that `gemini-3.5-flash`, `gemini-3-flash-preview` and the embedding model are on the free tier (docs confirm the chat IDs; embedding id is ambiguous: `gemini-embedding-001` vs `gemini-embedding-2` → decide in Phase 2)
+- [ ] Record actual RPM / RPD per model per project in `docs/12` §3; apply the decision rule (RPD < 200 → smaller SPA quotas, eval only on eval project, record video right after 14:00 WIB reset)
+- [ ] Neon project (Singapore, Postgres only), pooled connection string saved (needed by Phase 9; local Docker Postgres covers Phases 2–8)
+- [ ] Vercel account linked to GitHub (needed by Phase 9)
+- [ ] Read `docs/12` once end-to-end
 
-- [ ] `@google/genai`: `thinkingConfig.thinkingLevel`, `abortSignal`, `usageMetadata.thoughtsTokenCount`, `ai.models.list()`
-- [x] Gemini pricing: `gemini-3.5-flash` 1.50 / 9.00, `gemini-3-flash` 0.50 / 3.00 per 1M (official, checked 2026-10-06; re-check before final eval)
-- [ ] Ollama `think: false` support for Gemma 4; abort API of the `ollama` npm client
-- [ ] `waitUntil` from `@vercel/functions`; `attachDatabasePool` availability
-- [ ] `pg_trgm` + `vector` extensions on Neon
-- [ ] Vercel `vercel.json` syntax for `regions: ["sin1"]` and `maxDuration: 120`
-- [ ] Vercel zero-config Hono builds sources that import with `.ts` extensions (we run TS via Node type stripping) and resolves the `@mir/shared` workspace package (exports `./src/index.ts`); otherwise add a build step in Phase 9
+## External facts verified (2026-10-06, sources in docs/04, docs/08, docs/12)
+
+- [x] `@google/genai`: `config.thinkingConfig.thinkingLevel` (enum `ThinkingLevel.MINIMAL|LOW|MEDIUM|HIGH`), `config.abortSignal` (client-side only: usage is still billed), `usageMetadata.thoughtsTokenCount`
+- [x] Both Gemini models support `minimal`; if unset, 3.5 Flash defaults to `medium`, 3 Flash Preview to `high`; keep temperature default
+- [x] Gemini pricing: `gemini-3.5-flash` 1.50 / 9.00, `gemini-3-flash` 0.50 / 3.00 per 1M (re-check before final eval)
+- [x] Ollama: `think: false` works on `gemma4:e2b-mlx` (no `thinking` field); `nomic-embed-text` = 768 dims; JS client `abort()` aborts all streams of one client → one client per attempt
+- [x] `@vercel/functions`: `waitUntil(promise)` and `attachDatabasePool(pool)` (supports `pg`)
+- [x] Neon: `vector` 0.8.x and `pg_trgm` 1.6 on PG14–18
+- [x] Vercel Hobby: one region (`regions: ["sin1"]`), 300 s default and max duration, per-function `functions.<path>.maxDuration`; Hono entry `src/index.ts` detected
+- [ ] Vercel zero-config Hono builds `.ts`-extension imports and the `@mir/shared` workspace package → test on the first deploy (Phase 9); fallback is a build step
+- [ ] Phase 6 risk: with a minimal prompt Gemma 4 E2B wrote `Line 1: INTENT: Cancel Order` (echoed "Line 1:", label not snake_case). Test the real `PROMPT_V1` early; the parser and escalation must handle it
 
 ---
 

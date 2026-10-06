@@ -53,7 +53,9 @@ validated by us, so a provider 400 is that provider's problem). An empty stream 
 - **Verify against current docs before coding**: field names (`thinkingConfig.thinkingLevel`, `abortSignal`), and model IDs
   via `ai.models.list()`. Google docs (checked 2026-10-06) list `gemini-3.5-flash` (GA) and `gemini-3-flash-preview`.
 - **Do not set `temperature`/`topP`/`topK`** on Gemini 3 (Google recommends the default of 1.0; lower values may cause looping).
-- `thinking_level` default for Gemini 3 is `high` if not specified, so **always set it explicitly** (default `minimal` from env).
+- If `thinkingLevel` is not specified, `gemini-3.5-flash` defaults to `medium` and `gemini-3-flash-preview` to `high`, so **always set it explicitly** (default `minimal` from env). Both models support `minimal | low | medium | high`. In `@google/genai` use the `ThinkingLevel` enum (`ThinkingLevel.MINIMAL`, …) in `config.thinkingConfig.thinkingLevel` (source: https://ai.google.dev/gemini-api/docs/interactions/whats-new-gemini-3.5 and https://googleapis.github.io/js-genai/release_docs/enums/types.ThinkingLevel.html, checked 2026-10-06).
+- `config.abortSignal` cancels **client-side only**: Google still bills usage already generated. So an aborted attempt records the tokens it reported (if any) and is still charged to quota (SDK `GenerateContentConfig` docs, checked 2026-10-06).
+- Function calling on `gemini-3.5-flash` is strict: every `FunctionResponse` must carry the `id` and `name` of its `FunctionCall`. We only pass tools through, so this matters only to clients that continue a tool conversation.
   `minimal` does not guarantee zero thinking, so record `thoughtsTokenCount` anyway.
 - Usage: take `usageMetadata` from the last chunk: `promptTokenCount`, `candidatesTokenCount`, `thoughtsTokenCount`, `totalTokenCount`.
 - Function calling on Gemini 3: return `thoughtSignature` with tool results in follow-up turns. We only pass tools through and
@@ -65,7 +67,8 @@ validated by us, so a provider 400 is that provider's problem). An empty stream 
 - Default models: **`gemma4:e2b-mlx`** natively on the Mac (MLX engine, Apple Silicon only), **`gemma4:e2b-it-qat`** in the Docker container (GGUF on CPU; MLX cannot run in a Linux container). Both come from env. See doc 12 §4.
 - If the stream contains a separate `thinking` field, never forward it; count it as thinking tokens if reported. Use Gemma's recommended sampling defaults (do not lower temperature).
 - Usage from the final chunk: `prompt_eval_count`, `eval_count`. Thinking tokens = 0 unless the model reports them.
-- Abort: use the library's abort support or an AbortController on the underlying fetch (verify the current API).
+- Abort: `ollama.abort()` aborts **all** streams of that client instance (README, checked 2026-10-06), so create one `Ollama` client per attempt and call its `abort()` when the attempt's AbortSignal fires. Re-check the per-stream iterator API against the installed package types in Phase 4.
+- Verified locally 2026-10-06 (Ollama 0.32.5): `think: false` on `gemma4:e2b-mlx` returns no `thinking` field; `nomic-embed-text` returns 768-dim vectors. `gemma4:e2b` and `gemma4:e2b-mlx` have the same model id on the Mac.
 - `supportsTools` comes from env (`OLLAMA_SUPPORTS_TOOLS`), because it depends on the pulled model (Gemma 4 supports native function calling).
 - Startup check (`/healthz` and boot): `GET /api/tags`. If the chat or embed model is missing, log a clear instruction
   (`ollama pull <model>` or `docker compose --profile ollama up ollama-pull`). Do not crash: the router will fall back to mock and record `network_error`/`upstream_error`.

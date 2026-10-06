@@ -23,15 +23,15 @@ run the verification, tick the boxes below, commit, and **stop** with a short su
 
 ## Pre-flight (owner, manual, ~30 min)
 
-- [ ] GitHub repo `mini-inference-router` created (public or reviewer-accessible).
+- [x] GitHub repo `mini-inference-router` created (public or reviewer-accessible). *(public, checked 2026-10-06)*
 - [ ] Gemini API key from AI Studio. In AI Studio confirm: `gemini-3.5-flash` and `gemini-3-flash-preview` available on the free tier, their RPM/RPD, and the embedding model ID. Test it:
   `curl "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY" | grep -E '"name": "models/gemini-3'`
 - [ ] Neon project (Singapore, Postgres only). Pooled connection string saved.
 - [ ] Vercel account linked to GitHub.
-- [ ] Mac: Docker Desktop running with **≥ 8 GB memory**. Ollama up to date (`ollama --version`). Models: `gemma4:e2b-mlx` and `nomic-embed-text` (already on the Mac, confirm with `ollama list` and `ollama show gemma4:e2b-mlx`), plus `ollama pull gemma4:e2b-it-qat` to test the container model natively once.
+- [x] Mac: Docker Desktop running with **≥ 8 GB memory**. Ollama up to date (`ollama --version`). Models: `gemma4:e2b-mlx` and `nomic-embed-text` (already on the Mac, confirm with `ollama list` and `ollama show gemma4:e2b-mlx`). The container model `gemma4:e2b-it-qat` is **not** pulled on the Mac: the `ollama-pull` service fetches it into the Docker volume, and it is tested in Phase 10.
 - [ ] **Two Google AI Studio projects**: `router-demo` (key for Vercel) and `router-eval` (key for local eval + embedding builds). Record the actual RPM/RPD of `gemini-3.5-flash`, `gemini-3-flash-preview` and the embedding model for each project in `docs/12` §3 and apply its decision rule.
 - [ ] Read `docs/12-free-tier-limits-and-risks.md` once end-to-end.
-- [ ] Python 3.10+ available for the one-off data prep.
+- [x] Python 3.10+ available for the one-off data prep. *(Homebrew 3.14 and uv 3.12; `/usr/bin/python3` is 3.9, so call `python3.12` / `uv run` explicitly)*
 
 ---
 

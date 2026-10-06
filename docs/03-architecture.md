@@ -124,7 +124,7 @@ Format: `event: <name>\ndata: <json>\n\n`. Send a heartbeat comment `: ping` eve
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
-CREATE EXTENSION IF NOT EXISTS pg_trgm;   -- trigram similarity for hybrid ranking and lexical fallback (available on Neon; verify)
+CREATE EXTENSION IF NOT EXISTS pg_trgm;   -- trigram similarity for hybrid ranking and lexical fallback (Neon: pg_trgm 1.6, vector 0.8.x on PG14–18, checked 2026-10-06)
 
 CREATE TABLE tenants (
   id               text PRIMARY KEY,              -- 'acme'

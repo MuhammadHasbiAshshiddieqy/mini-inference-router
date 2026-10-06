@@ -21,7 +21,7 @@ during pre-flight, because providers change free tiers often.
 | Usage policy | Hobby = personal, non-commercial | An assessment demo is personal/non-commercial | — |
 | Serverless lifecycle | Work after the response ends may be frozen | Metering writes after the stream closes could be lost | Write metering **before** sending `done`. For client-abort paths use `waitUntil` from `@vercel/functions` (*verify API*) |
 | Response buffering | Compression or proxies can buffer SSE | Tokens would arrive all at once | Headers `Content-Type: text/event-stream`, `Cache-Control: no-cache, no-transform`, `X-Accel-Buffering: no`; never gzip SSE routes; verify with `curl -N` on prod |
-| DB connections in Fluid compute | Instances are reused and idle connections can leak | Pool exhaustion on Neon | `pg.Pool({max:3, idleTimeoutMillis: 5000})` + Vercel's `attachDatabasePool` helper if available (*verify*) |
+| DB connections in Fluid compute | Instances are reused and idle connections can leak | Pool exhaustion on Neon | `pg.Pool({max:3, idleTimeoutMillis: 5000})` + `attachDatabasePool(pool)` from `@vercel/functions` right after creating the pool (supports `pg`; verified 2026-10-06) |
 
 ## 2. Neon (Free plan, AWS Singapore)
 
@@ -44,7 +44,7 @@ during pre-flight, because providers change free tiers often.
 | Separate quota per model | Primary and fallback have independent quotas | This is the basis of the fallback design | 429 on 3.5 Flash → 3 Flash → mock |
 | Embedding quota | Every support request = 1 query embedding | Demo capacity is also bounded by embedding RPD | Embedding errors → **lexical fallback** (trigram retrieval, confidence ≤ medium); KB embeddings are built once with batching and cached in git |
 | Data use | Free-tier prompts may be used to improve Google products | Fine for a public dataset; not for real customer data | Stated in the report |
-| Thinking default | Gemini 3 defaults to `high` if unset | Latency and cost spike | Always send `thinkingLevel` explicitly (`minimal`) |
+| Thinking default | If unset: `gemini-3.5-flash` → `medium`, `gemini-3-flash-preview` → `high` (checked 2026-10-06) | Latency and cost spike | Always send `thinkingLevel` explicitly (`minimal`) |
 
 **Decision rule after pre-flight:** if `gemini-3.5-flash` RPD on the demo project is **< 200**, keep the design but
 (1) give the public SPA tenants smaller quotas, (2) run evals only on the eval project, and (3) record the demo video early in the day (WIB) right after a reset.
@@ -118,6 +118,6 @@ OLLAMA_THINK=false
 | Free-tier quota exhaustion paths | ✅ separate Gemini projects, fallback, mock, bounded tenant quotas |
 | Reviewers blocked by Vercel auth or a sleeping DB | ✅ production public; Neon auto-resumes; README note |
 | Demo keys public | ✅ bounded quotas + private reviewer key |
-| Remaining unknowns (must be verified in pre-flight) | ⚠️ exact Gemini RPM/RPD per model; `@google/genai` field names; Ollama `think` flag for Gemma 4; `waitUntil` / `attachDatabasePool` APIs; `pg_trgm` availability on Neon (expected, verify) |
+| Remaining unknowns (must be verified in pre-flight) | ✅ verified 2026-10-06: `@google/genai` fields (`thinkingConfig.thinkingLevel` enum, `abortSignal`, `usageMetadata.thoughtsTokenCount`); Ollama `think: false` on Gemma 4; `waitUntil` / `attachDatabasePool` in `@vercel/functions`; `vector` 0.8.x and `pg_trgm` 1.6 on Neon (PG14–18); `regions` + per-function `maxDuration` in `vercel.json`. ⚠️ still open: Gemini RPM/RPD per model (needs AI Studio); Gemini embedding model id (`gemini-embedding-001` vs `gemini-embedding-2`); whether Vercel zero-config Hono builds `.ts`-extension imports and the workspace package (test on first deploy) |
 
 The remaining unknowns are API details, not architecture. Each one has a fallback that does not change the design.
