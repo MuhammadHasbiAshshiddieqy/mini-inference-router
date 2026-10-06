@@ -1,0 +1,33 @@
+{
+  "name": "mini-inference-router",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.9.1",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter gateway --filter console dev",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:migrate": "echo 'db:migrate is implemented in Phase 2' && exit 1",
+    "db:seed": "echo 'db:seed is implemented in Phase 2' && exit 1",
+    "kb:embed": "echo 'kb:embed is implemented in Phase 2' && exit 1",
+    "calibrate": "echo 'calibrate is implemented in Phase 6' && exit 1",
+    "eval:retrieval": "echo 'eval:retrieval is implemented in Phase 8' && exit 1",
+    "eval": "echo 'eval is implemented in Phase 8' && exit 1",
+    "eval:compare": "echo 'eval:compare is implemented in Phase 8' && exit 1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.4",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3"
+  }
+}

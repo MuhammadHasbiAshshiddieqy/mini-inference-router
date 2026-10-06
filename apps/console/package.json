@@ -1,0 +1,9 @@
+{
+  "name": "@mir/console",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'console: Vue app is scaffolded in Phase 7'"
+  }
+}

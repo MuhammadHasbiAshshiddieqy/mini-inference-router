@@ -1,0 +1,20 @@
+{
+  "name": "@mir/gateway",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=../../.env src/local.ts",
+    "start": "node --env-file-if-exists=../../.env src/local.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.3",
+    "@mir/shared": "workspace:*",
+    "hono": "^4.13.13",
+    "pino": "^10.4.0",
+    "zod": "^4.6.5"
+  }
+}

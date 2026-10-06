@@ -37,11 +37,11 @@ run the verification, tick the boxes below, commit, and **stop** with a short su
 
 ## Phase 0: Repo bootstrap
 Read: `CLAUDE.md`, `docs/03` §8.
-- [ ] pnpm workspace: `apps/gateway`, `apps/console`, `packages/shared`. Root `tsconfig.base.json` (strict), ESLint (typescript-eslint, flat config), Prettier, Vitest config.
-- [ ] Root scripts from CLAUDE.md "Commands" (stubs allowed where later phases fill them in).
-- [ ] `.env.example` (doc 03 §8), `.gitignore` (node_modules, dist, .env*, keep `.env.example`), `.nvmrc` (22).
-- [ ] `packages/shared`: `intents.ts` (27 + `out_of_scope`), `sse.ts` (Zod schemas for every event in doc 03 §4), `api.ts` (request/response DTOs).
-- [ ] Minimal Hono app: `GET /healthz`, request-id middleware, error middleware, `AppError`, pino logger, env parsing with Zod. `src/index.ts` exports the app; `src/local.ts` serves it.
+- [x] pnpm workspace: `apps/gateway`, `apps/console`, `packages/shared`. Root `tsconfig.base.json` (strict), ESLint (typescript-eslint, flat config), Prettier, Vitest config.
+- [x] Root scripts from CLAUDE.md "Commands" (stubs allowed where later phases fill them in).
+- [x] `.env.example` (doc 03 §8), `.gitignore` (node_modules, dist, .env*, keep `.env.example`), `.nvmrc` (22).
+- [x] `packages/shared`: `intents.ts` (27 + `out_of_scope`), `sse.ts` (Zod schemas for every event in doc 03 §4), `api.ts` (request/response DTOs).
+- [x] Minimal Hono app: `GET /healthz`, request-id middleware, error middleware, `AppError`, pino logger, env parsing with Zod. `src/index.ts` exports the app; `src/local.ts` serves it.
 **Verify:** `pnpm -r typecheck && pnpm -r lint && pnpm -r test` green; `pnpm --filter gateway dev` → `curl localhost:8787/healthz`.
 **Commit:** `chore: bootstrap monorepo`
 

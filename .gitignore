@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+.vercel/
+.DS_Store
+*.log
+
+.env
+.env.*
+!.env.example
+
+# Python (scripts/prepare_data.py)
+__pycache__/
+.venv/

@@ -98,7 +98,7 @@ Format: `event: <name>\ndata: <json>\n\n`. Send a heartbeat comment `: ping` eve
 | `tool_call` | `{ name, arguments }` | chat with tools only |
 | `refusal` | `{ reason, message }` | support refusal |
 | `error` | `{ code, message }` | mid-stream failure (after first token) |
-| `done` | `{ outcome, served_by:{backend_id,model}\|null, fallback_fired, escalated, usage:{prompt_tokens,completion_tokens,thinking_tokens,total_tokens,estimated}, latency_ms, ttft_ms, cost_usd, quota:{limit,used,remaining} }` | always last |
+| `done` | `{ outcome, served_by:{backend_id,model}\|null, fallback_fired, escalated, usage:{prompt_tokens,completion_tokens,thinking_tokens,total_tokens,estimated}, latency_ms, ttft_ms, cost_usd, quota:{limit,used,remaining}, decisions:string[] }` (`decisions` = routing exclusions from `router/plan.ts`, doc 04 §4) | always last |
 
 `stream:false` returns one JSON object containing the union of these fields (`answer` = concatenated tokens).
 
@@ -204,6 +204,7 @@ Outcomes (`requests.outcome`): `ok`, `ok_after_fallback`, `refused`, `quota_exce
 | 400 | `invalid_request` | Zod validation failed (details list the issues) |
 | 401 | `missing_api_key` / `invalid_api_key` | auth |
 | 403 | `tenant_disabled` / `debug_not_allowed` / `no_allowed_backend` | policy |
+| 404 | `not_found` | unknown route (same JSON error shape as every other error) |
 | 413 | `payload_too_large` | body > 64 KB |
 | 415 | `unsupported_media_type` | not JSON |
 | 422 | `tools_unsupported` | tools requested but no allowed backend supports tools |

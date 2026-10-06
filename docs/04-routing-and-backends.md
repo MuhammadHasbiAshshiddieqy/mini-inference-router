@@ -97,7 +97,7 @@ Backend id ≠ model id: `gemini-3.5-flash` → model `GEMINI_PRIMARY_MODEL` (de
 plan(profileBackends, tenant, request) -> { candidates: BackendSpec[], decisions: string[] }
 ```
 
-Applied in order. Every exclusion is recorded in `decisions` (returned in the `meta`/`done` payload and logged):
+Applied in order. Every exclusion is recorded in `decisions` (returned in the `done` payload and logged):
 
 1. **Tenant policy**: keep only `tenant.allowed_backends`. Empty → 403 `no_allowed_backend`.
 2. **Capability**: if `request.tools` is present, keep only `supportsTools`. Empty → 422 `tools_unsupported`.

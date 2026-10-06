@@ -22,13 +22,14 @@ no new dependency without a row in `docs/11` and owner approval · every cut log
 
 - [ ] GitHub repo created and remote linked (`origin` = `MuhammadHasbiAshshiddieqy/mini-inference-router`) ✅ remote added, repo still empty
 - [ ] Two Google AI Studio projects: `router-demo` (Vercel) and `router-eval` (eval + embedding builds)
-- [ ] Confirm model IDs on free tier: `gemini-3.5-flash`, `gemini-3-flash-preview`, embedding model (e.g. `gemini-embedding-001`)
+- [ ] Confirm model IDs on free tier: `gemini-3.5-flash`, `gemini-3-flash-preview`, embedding model. Docs check 2026-10-06: chat IDs confirmed; embedding is ambiguous (models page lists `gemini-embedding-001` + `gemini-embedding-2-preview`, embeddings page names `gemini-embedding-2`) → decide in Phase 2
 - [ ] Record actual RPM / RPD per model per project in `docs/12` §3; apply the decision rule (RPD < 200 → smaller SPA quotas, eval only on eval project, record video right after 14:00 WIB reset)
 - [ ] Neon project (Singapore, Postgres only), pooled connection string saved
 - [ ] Vercel account linked to GitHub
 - [ ] Docker Desktop with ≥ 8 GB memory
 - [ ] Ollama: `ollama --version`, `ollama list` (expect `gemma4:e2b-mlx`, `nomic-embed-text`), `ollama show gemma4:e2b-mlx` (tools, thinking), `ollama pull gemma4:e2b-it-qat`
-- [ ] Python 3.10+ available
+- [ ] Python 3.10+ available (**found 3.9.6** on 2026-10-06; Phase 1 needs ≥ 3.10)
+- [x] pnpm installed (12.9.1, global via npm; Node 26 ships without corepack)
 
 ## External facts to verify before coding (docs/12 §7 "remaining unknowns")
 
@@ -38,16 +39,17 @@ no new dependency without a row in `docs/11` and owner approval · every cut log
 - [ ] `waitUntil` from `@vercel/functions`; `attachDatabasePool` availability
 - [ ] `pg_trgm` + `vector` extensions on Neon
 - [ ] Vercel `vercel.json` syntax for `regions: ["sin1"]` and `maxDuration: 120`
+- [ ] Vercel zero-config Hono builds sources that import with `.ts` extensions (we run TS via Node type stripping) and resolves the `@mir/shared` workspace package (exports `./src/index.ts`); otherwise add a build step in Phase 9
 
 ---
 
 ## Phase 0 — Repo bootstrap
-- [ ] pnpm workspace: `apps/gateway`, `apps/console`, `packages/shared`
-- [ ] `tsconfig.base.json` (strict), ESLint flat config (typescript-eslint, eslint-plugin-vue), Prettier, Vitest
-- [ ] Root scripts from `CLAUDE.md` "Commands" (stubs OK)
-- [ ] `.env.example` (doc 03 §8), `.gitignore`, `.nvmrc` (22)
-- [ ] `packages/shared`: `intents.ts` (27 + `out_of_scope`), `sse.ts` (Zod for all events, doc 03 §4), `api.ts` (DTOs)
-- [ ] Gateway: `create-app.ts`, `index.ts` (default export), `local.ts` (`@hono/node-server`), `GET /healthz`, request-id (UUIDv7), error middleware + `AppError`, pino, `config/env.ts` (Zod, fail fast)
+- [x] pnpm workspace: `apps/gateway`, `apps/console` (placeholder until Phase 7), `packages/shared`
+- [x] `tsconfig.base.json` (strict), ESLint flat config (typescript-eslint; `eslint-plugin-vue` added with the console in Phase 7), Prettier, Vitest
+- [x] Root scripts from `CLAUDE.md` "Commands" (stubs OK)
+- [x] `.env.example` (doc 03 §8), `.gitignore`, `.nvmrc` (22)
+- [x] `packages/shared`: `intents.ts` (27 + `out_of_scope`), `sse.ts` (Zod for all events, doc 03 §4), `api.ts` (DTOs)
+- [x] Gateway: `create-app.ts`, `index.ts` (default export), `local.ts` (`@hono/node-server`), `GET /healthz`, request-id (UUIDv7), error middleware + `AppError`, pino, `config/env.ts` (Zod, fail fast)
 - **Verify:** `pnpm -r typecheck && pnpm -r lint && pnpm -r test`; `curl localhost:8787/healthz`
 - **Commit:** `chore: bootstrap monorepo`
 
