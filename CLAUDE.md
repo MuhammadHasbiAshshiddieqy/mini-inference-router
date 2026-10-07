@@ -30,6 +30,7 @@ The full requirement text and traceability matrix are in `docs/01-requirements.m
 | `docs/09-execution-plan.md` | Ordered phases with acceptance criteria and progress checkboxes |
 | `docs/10-report-and-demo.md` | Technical report template, cut list, demo video script, submission checklist |
 | `docs/12-free-tier-limits-and-risks.md` | Free-tier limits (Vercel, Neon, Gemini), local model choices (MLX vs Docker), abuse model, risk register |
+| `learn/` | One-day onboarding guide to the codebase for newcomers (keep it in sync when behaviour or file names change) |
 | `docs/11-tech-decisions.md` | Why each tool/library was chosen and why alternatives (LangChain, RAGAS, Langfuse, …) were rejected. Check it before adding any dependency |
 
 ## Working rules

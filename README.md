@@ -8,6 +8,7 @@ Every request goes through per-tenant API-key auth, a token-budget quota that **
 A Vue console shows what happened: which model answered, whether fallback fired, what was retrieved, the intent,
 tokens, latency and cost.
 
+- **New to the code (or to JavaScript)?** Start with the one-day guide in [`learn/`](learn/README.md).
 - **Technical report:** [`docs/REPORT.md`](docs/REPORT.md) · **Evaluation:** [`eval/report.md`](eval/report.md)
 - **Live:** console ⏳ _pending deploy_ · gateway ⏳ _pending deploy_ · **Video:** ⏳ _pending_
 - **Public demo keys** (low quotas, reset before submission): ⏳ _listed here after deploy_
@@ -160,6 +161,7 @@ scripts         data prep (Python, one-off), seed, KB embedding, calibration, ev
 data            dataset splits, embedding caches, calibrated thresholds (all committed)
 eval            results and report
 docs            specs (01–12), technical report, screenshots
+learn           a one-day guided tour of the code for newcomers
 ```
 
 Design specs: [`docs/01-requirements.md`](docs/01-requirements.md) (traceability R1–R24) ·
