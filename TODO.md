@@ -46,7 +46,7 @@ Owner only (accounts and keys; Claude cannot do these):
 - [x] Neon: `vector` 0.8.x and `pg_trgm` 1.6 on PG14–18
 - [x] Vercel Hobby: one region (`regions: ["sin1"]`), 300 s default and max duration, per-function `functions.<path>.maxDuration`; Hono entry `src/index.ts` detected
 - [ ] Vercel zero-config Hono builds `.ts`-extension imports and the `@mir/shared` workspace package → test on the first deploy (Phase 9); fallback is a build step
-- [ ] Phase 6 risk: with a minimal prompt Gemma 4 E2B wrote `Line 1: INTENT: Cancel Order` (echoed "Line 1:", label not snake_case). Test the real `PROMPT_V1` early; the parser and escalation must handle it
+- [x] Phase 6 risk: with a minimal prompt Gemma 4 E2B wrote `Line 1: INTENT: Cancel Order` (echoed "Line 1:", label not snake_case). Test the real `PROMPT_V1` early; the parser and escalation must handle it *(resolved: `HEADER_RE`/`SEPARATOR_RE` tolerate the echo, fixtures in `assistant-pure.test.ts`; labels are lower-cased; a label like `Cancel Order` is invalid output → escalation, then refusal `unusable_model_output`)*
 
 ---
 
@@ -155,13 +155,14 @@ Owner only (accounts and keys; Claude cannot do these):
 - [x] `docs/REPORT.md` from template with real numbers; "What I cut" complete; trade-offs; tech-choices summary
 - [x] `README.md`: live URLs + demo keys, 3 ways to run, diagram, curl examples, eval table, report + video links, dataset license (CDLA-Sharing 1.0), "first request may be slow" note, Docker ≥ 8 GB note
 - **Commit:** `docs: technical report and README`
-- [ ] After deploy: fill REPORT/README placeholders (⏳): live URLs, public demo keys, video link, config A column, gemini-embedding-001 thresholds, eval:compare A vs B
+- [x] Config A column, gemini-embedding-001 thresholds and `eval:compare` A vs B filled (cloud profile run locally, 2026-10-06)
+- [ ] After deploy: fill REPORT/README placeholders (⏳): live URLs, public demo keys, video link
 
 ## Phase 12 — Video + submit
 - [ ] `db:seed --reset-usage` before recording; record per `docs/10` Part D (6–8 min); upload unlisted; link in README
 - [ ] `db:seed --reset-usage` on Neon; final `smoke.sh` PASS; tag `v1.0.0`
 - [ ] Submission checklist (`docs/10` Part E), incl. `git log -p | grep -i "AIza"` empty
-- [ ] Reply to recruiter with repo, URL, report, video, reviewer key (draft in `docs/10` Part F)
+- [ ] Reply to recruiter with repo, URL, report, video, reviewer key and the read-only admin key for the Usage page (draft in `docs/10` Part F)
 
 ---
 

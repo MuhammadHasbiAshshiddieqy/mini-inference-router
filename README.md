@@ -12,6 +12,8 @@ tokens, latency and cost.
 - **Technical report:** [`docs/REPORT.md`](docs/REPORT.md) · **Evaluation:** [`eval/report.md`](eval/report.md)
 - **Live:** console ⏳ _pending deploy_ · gateway ⏳ _pending deploy_ · **Video:** ⏳ _pending_
 - **Public demo keys** (low quotas, reset before submission): ⏳ _listed here after deploy_
+- **Usage and Requests pages** need the admin key (the `/admin/*` routes are read-only); it is sent privately with
+  the submission, never bundled into the console.
 
 ## Architecture
 

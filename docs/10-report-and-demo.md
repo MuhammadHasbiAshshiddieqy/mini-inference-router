@@ -99,7 +99,9 @@ Short version of docs/11-tech-decisions.md §12 (the "not used" table), with a l
 9. **(7:00) Local mode, 30 s.** `docker compose --profile ollama up` already running; same console against Ollama.
 10. **(7:30) Cuts and trade-offs, 30 s.** The "What I cut" table; close.
 
-Record with `db:seed --reset-usage` done beforehand. Keep a second take of the fallback segment in case of free-tier 429s.
+Record with `db:seed --reset-usage` done beforehand, after the 14:00 WIB free-tier reset. Type the admin key into
+the console (Usage page) off camera before recording: the Usage, Requests and request-detail pages need it. Keep a
+second take of the fallback segment in case of free-tier 429s.
 
 ## Part E: Submission checklist
 
@@ -110,6 +112,7 @@ Record with `db:seed --reset-usage` done beforehand. Keep a second take of the f
 - [ ] Smoke test PASS on prod right before sending; quotas reset.
 - [ ] No secrets in git history (`git log -p | grep -i "AIza"` returns nothing).
 - [ ] Video plays logged-out.
+- [ ] Reviewer can open the Usage page on the deployed console with the admin key from the email (`/admin/*` is read-only).
 
 ## Part F: Reply email draft (to the recruiter, same thread)
 
@@ -127,6 +130,7 @@ Thank you for the opportunity. Please find my submission for the Mini Inference 
 
 Run instructions (cloud, Docker, or local Ollama) are in the README. Public demo keys are listed there.
 A dedicated reviewer key with a larger quota: <reviewer key>
+Admin key for the console's Usage and Requests pages (read-only endpoints): <admin key>
 I'm happy to walk through the design or answer any questions.
 
 Best regards,
