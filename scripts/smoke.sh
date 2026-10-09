@@ -44,21 +44,21 @@ post /v1/support/answer "$KEY" '{"message":""}'
 check "3. bad body → 400 invalid_request" $? "$STATUS $BODY"
 
 # 4. streaming support answer
-sse=$(curl -sN -X POST "$BASE/v1/support/answer" -H "authorization: Bearer $KEY" -H "content-type: application/json" -d '{"message":"I want to cancel my order"}')
+sse=$(curl -sN -X POST "$BASE/v1/support/answer" -H "authorization: Bearer $KEY" -H "content-type: application/json" -d '{"message":"how do i change my shipping address"}')
 events=$(echo "$sse" | grep '^event: ' | sed 's/event: //' | uniq | tr '\n' ' ')
 done_outcome=$(echo "$sse" | grep -A1 '^event: done' | tail -1 | sed 's/^data: //' | json 'v.outcome')
 [[ "$events" == "meta retrieval route "*"intent token "*"done " ]] && [[ "$done_outcome" == ok* ]]
 check "4. SSE stream: ${events}→ ${done_outcome}" $? "$events / $done_outcome"
 
 # 5. force-fail the primary → fallback, recorded
-post /v1/support/answer "$KEY" "{\"message\":\"Has my refund been processed yet?\",\"stream\":false,\"debug\":{\"force_fail\":[\"$primary\"]}}"
+post /v1/support/answer "$KEY" "{\"message\":\"how do i change my shipping address\",\"stream\":false,\"debug\":{\"force_fail\":[\"$primary\"]}}"
 fallback_id=$(echo "$BODY" | json 'v.request_id')
 served=$(echo "$BODY" | json 'v.served_by && v.served_by.backend_id')
 [ "$STATUS" = 200 ] && [ "$(echo "$BODY" | json 'v.fallback_fired')" = true ] && [ "$served" = "$second" ]
 check "5. force-fail $primary → served by $served (fallback_fired)" $? "$STATUS $BODY"
 
 # 6. force-fail every real backend → mock
-post /v1/support/answer "$KEY" "{\"message\":\"Has my refund been processed yet?\",\"stream\":false,\"debug\":{\"force_fail\":[\"${real//,/\",\"}\"]}}"
+post /v1/support/answer "$KEY" "{\"message\":\"how do i change my shipping address\",\"stream\":false,\"debug\":{\"force_fail\":[\"${real//,/\",\"}\"]}}"
 [ "$(echo "$BODY" | json 'v.served_by && v.served_by.backend_id')" = mock ]
 check "6. force-fail all real backends → served by mock" $? "$STATUS $BODY"
 
@@ -84,7 +84,7 @@ check "8b. embedding outage → lexical_fallback, answered, confidence $level" $
 # 9. quota exhaustion on tiny
 code=""
 for _ in 1 2 3 4 5 6 7 8; do
-  post /v1/support/answer "$TINY" '{"message":"I want to cancel my order","stream":false}'
+  post /v1/support/answer "$TINY" '{"message":"how do i change my shipping address","stream":false}'
   if [ "$STATUS" = 429 ]; then code=$(echo "$BODY" | json 'v.error.code'); break; fi
 done
 [ "$code" = quota_exceeded ]

@@ -133,7 +133,35 @@ The free plan scales to zero after inactivity and wakes on the next connection (
 3. Vercel console project: Root Directory `apps/console`, framework Vite, build `pnpm build`, output `dist`; env `VITE_GATEWAY_URL`, `VITE_DEMO_TENANTS` (acme, globex, tiny keys only). `apps/console/vercel.json` rewrites every path to `index.html`.
 4. Deployment Protection off for production; then `BASE=https://<gateway> … EXPECT_PROFILE=cloud ./scripts/smoke.sh` and `curl -N` to confirm incremental streaming.
 
-Open items to confirm on the first deploy: zero-config Hono builds the `.ts`-extension imports and the JSON import of `data/thresholds.json`; the `functions` key matches the detected entry; `@vercel/functions` (`waitUntil`, `attachDatabasePool`) awaits owner approval (docs/11 rule).
+### As deployed (9 Oct 2026): what differs from the plan above
+
+The first deploys with the zero-config Hono preset did not work, so the gateway is deployed as a plain Vercel Function.
+Both projects live in the team `hasbi` (Hobby): `mini-router-gateway` and `mini-router-console`, deployed with the
+Vercel CLI from the **repo root** (`npx vercel deploy --prod`, project picked with `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`).
+
+- **Entry:** `apps/gateway/api/index.ts` re-exports the app through `hono/vercel` (`handle`, deprecated in Hono 4 in
+  favour of `@hono/vercel`, still shipped with 4.13); `apps/gateway/vercel.json` rewrites every path to `/api`, sets
+  `regions: ["sin1"]`, `maxDuration: 120` and `outputDirectory: "public"` (so the project root is not published as static
+  files). Framework preset: **Other**.
+- **Why not the Hono preset:** it requires the entry file to import `hono` itself, and it type-checks the entry with its own
+  tsconfig lookup (`@vercel/node`, `EXPERIMENTAL_NODE_TYPESCRIPT_ERRORS`), which ignored this repo's `strict` settings and
+  `types: ["node"]` and failed on valid code. A plain function is transpiled without that check.
+- **`@mir/shared`:** Vercel transpiles `.ts` to `.js`, but the workspace package exports `./src/index.ts`, which then does not
+  exist at runtime. `apps/gateway/vercel-build.mjs` (the Vercel `buildCommand`) compiles `packages/shared/src` to `.js` with
+  TypeScript and points the package export at it. It edits only the copy being built on Vercel, never the repository.
+- **Environment (production):** gateway `PROFILE`, `DATABASE_URL` (Neon pooled), `GEMINI_API_KEY`, `ADMIN_API_KEY` (a strong
+  random key, different from the local one), `CORS_ORIGINS`; console `VITE_GATEWAY_URL`, `VITE_DEMO_TENANTS` (the three public
+  demo keys). Secrets are `sensitive` env vars. `.vercelignore` keeps `.env` out of the CLI upload (it replaces `.gitignore`).
+- **Deployment Protection** is on by default for new projects (`all_except_custom_domains`); it was turned off so reviewers
+  reach the production URLs without a Vercel login.
+- **Not used:** `@vercel/functions` (`waitUntil`, `attachDatabasePool`) was not added (docs/11 rule, no owner approval). Consequence:
+  if a client disconnects mid-answer on Vercel, that request's final metering write may be frozen before it completes.
+- **Verified on production:** `scripts/smoke.sh` 13/13 PASS with `EXPECT_PROFILE=cloud`; the SSE stream arrives incrementally
+  (`meta` at 0.3 s, first token at 1.9 s, last at 3.2 s, 10 network chunks, `no-cache, no-transform`); CORS preflight from the
+  console origin; no admin or reviewer key in the console bundle.
+- **Pre-gate vs the example chips:** with `gemini-embedding-001` (`T_oos` 0.768) short plain questions score close to the
+  threshold ("I want to cancel my order" 0.761 is refused). The console's "easy" chip and the smoke test use "how do i change
+  my shipping address" (0.789 with Gemini, 0.796 with nomic).
 
 ## 3. Smoke test (`scripts/smoke.sh`)
 

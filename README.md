@@ -10,8 +10,17 @@ tokens, latency and cost.
 
 - **New to the code (or to JavaScript)?** Start with the one-day guide in [`learn/`](learn/README.md).
 - **Technical report:** [`docs/REPORT.md`](docs/REPORT.md) · **Evaluation:** [`eval/report.md`](eval/report.md)
-- **Live:** console ⏳ _pending deploy_ · gateway ⏳ _pending deploy_ · **Video:** ⏳ _pending_
-- **Public demo keys** (low quotas, reset before submission): ⏳ _listed here after deploy_
+- **Live:** console https://mini-router-console.vercel.app · gateway https://mini-router-gateway.vercel.app · **Video:** ⏳ _pending_
+- **Public demo keys** (low quotas, reset before submission), also bundled into the console's tenant menu:
+
+  | Tenant | API key | Quota | Policy |
+  |---|---|---|---|
+  | `acme` | `mir_local_37323db3d674c9c4e5cf0eec4abbe04b` | 150,000 tokens | all backends, debug options |
+  | `globex` | `mir_local_0f52cac375b07ab0a69c1c4039f1f0a3` | 50,000 tokens | `gemini-3-flash` + mock only, no debug |
+  | `tiny` | `mir_local_24fb112fb8c60ea3942e034bd162d610` | 3,000 tokens | low quota, shows the 429 |
+
+  The first request after idle can take a few seconds (cold start). Gemini's free tier allows 20 generation
+  requests per day per model, so after that the deployed demo answers from the labelled MOCK backend.
 - **Usage and Requests pages** need the admin key (the `/admin/*` routes are read-only); it is sent privately with
   the submission, never bundled into the console.
 
@@ -91,7 +100,7 @@ GW=http://localhost:8787; KEY=<tenant key>
 
 # Support assistant, streamed (events: meta, retrieval, route, intent, token…, done)
 curl -N $GW/v1/support/answer -H "authorization: Bearer $KEY" -H "content-type: application/json" \
-  -d '{"message":"I want to cancel my order"}'
+  -d '{"message":"how do i change my shipping address"}'
 
 # Same, one JSON object: answer, refused, intent {final, llm, knn}, confidence, retrieved, served_by, usage, cost
 curl $GW/v1/support/answer -H "authorization: Bearer $KEY" -H "content-type: application/json" \

@@ -26,8 +26,8 @@ run the verification, tick the boxes below, commit, and **stop** with a short su
 - [x] GitHub repo `mini-inference-router` created (public or reviewer-accessible). *(public, checked 2026-10-06)*
 - [x] Gemini API key from AI Studio. *(2026-10-06: key works; `models.list` confirms `gemini-3.5-flash`, `gemini-3-flash-preview`, `gemini-embedding-001`. RPD observed from real 429s and recorded in `docs/12` §3: 20 generation requests/day/project/model; embeddings 100 texts/min, 1,000/day.)* In AI Studio confirm: `gemini-3.5-flash` and `gemini-3-flash-preview` available on the free tier, their RPM/RPD, and the embedding model ID. Test it:
   `curl "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY" | grep -E '"name": "models/gemini-3'`
-- [ ] Neon project (Singapore, Postgres only). Pooled connection string saved.
-- [ ] Vercel account linked to GitHub.
+- [x] Neon project (Singapore, Postgres only). Pooled connection string saved.
+- [x] Vercel account (CLI login; projects deployed with the CLI, not through the GitHub integration).
 - [x] Mac: Docker Desktop running with **≥ 8 GB memory**. Ollama up to date (`ollama --version`). Models: `gemma4:e2b-mlx` and `nomic-embed-text` (already on the Mac, confirm with `ollama list` and `ollama show gemma4:e2b-mlx`). The container model `gemma4:e2b-it-qat` is **not** pulled on the Mac: the `ollama-pull` service fetches it into the Docker volume, and it is tested in Phase 10.
 - [ ] **Two Google AI Studio projects**: `router-demo` (key for Vercel) and `router-eval` (key for local eval + embedding builds). Record the actual RPM/RPD of `gemini-3.5-flash`, `gemini-3-flash-preview` and the embedding model for each project in `docs/12` §3 and apply its decision rule.
 - [ ] Read `docs/12-free-tier-limits-and-risks.md` once end-to-end.
@@ -115,8 +115,8 @@ Read: `docs/07`.
 
 ## Phase 9: Cloud profile + deploy
 Read: `docs/08` §2–§3.
-- [ ] Neon: migrate, seed, `kb:embed --provider gemini`, calibrate (cloud). Commit caches and thresholds.
-- [ ] Vercel gateway + console projects, env vars, `sin1`, CORS, `maxDuration: 120`, Deployment Protection off for production. `scripts/smoke.sh`.
+- [x] Neon: migrate, seed, `kb:embed --provider gemini --from-cache-only` (no calibration run needed: cache and thresholds were committed). *(9 Oct 2026: 1,350 rows, 4 tenants, PG 18.6, vector 0.8.6, pg_trgm 1.6)*
+- [x] Vercel gateway + console projects, env vars, `sin1`, CORS, `maxDuration: 120`, Deployment Protection off for production. `scripts/smoke.sh`. *(9 Oct 2026, as a plain function; see docs/08 "As deployed")*
 - [x] Run eval config A (against the deployed or a local cloud-profile gateway; record which) → `eval:compare` → `eval/report.md`. *(local cloud-profile gateway, 2026-10-06; Gemini's 20 requests/day/model free-tier cap limited run 1 to 14 Gemini answers)*
 **Verify:** `smoke.sh` all PASS against prod. SSE streams incrementally on prod (`curl -N`). The production URL opens in a private window without a Vercel login. Neon wakes from scale-to-zero and the first request still succeeds.
 **Commit:** `feat(deploy): cloud profile on Vercel + Neon, eval results`

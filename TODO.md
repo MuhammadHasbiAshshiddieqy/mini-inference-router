@@ -32,8 +32,8 @@ Owner only (accounts and keys; Claude cannot do these):
 - [ ] Two Google AI Studio projects: `router-demo` (Vercel) and `router-eval` (eval + embedding builds); put the eval key in `.env` as `GEMINI_API_KEY`
 - [x] Gemini key in `.env` works; `models.list` shows `gemini-3.5-flash`, `gemini-3-flash-preview`, `gemini-embedding-001` (2026-10-06). Embedding model decided: `gemini-embedding-001` (`gemini-embedding-2` returns one vector per batch)
 - [x] Limits observed from real 429s (2026-10-06), recorded in `docs/12` §3: generation **20 req/day/project/model** (3.5 Flash and 3 Flash Preview), embeddings 100 texts/min and 1,000/day per project. Decision rule (RPD < 200) triggered: owner to decide demo strategy (see summary)
-- [ ] Neon project (Singapore, Postgres only), pooled connection string saved (needed by Phase 9; local Docker Postgres covers Phases 2–8)
-- [ ] Vercel account linked to GitHub (needed by Phase 9)
+- [x] Neon project (Singapore, Postgres only), pooled connection string saved
+- [x] Vercel account (CLI login)
 - [ ] Read `docs/12` once end-to-end
 
 ## External facts verified (2026-10-06, sources in docs/04, docs/08, docs/12)
@@ -45,7 +45,7 @@ Owner only (accounts and keys; Claude cannot do these):
 - [x] `@vercel/functions`: `waitUntil(promise)` and `attachDatabasePool(pool)` (supports `pg`)
 - [x] Neon: `vector` 0.8.x and `pg_trgm` 1.6 on PG14–18
 - [x] Vercel Hobby: one region (`regions: ["sin1"]`), 300 s default and max duration, per-function `functions.<path>.maxDuration`; Hono entry `src/index.ts` detected
-- [ ] Vercel zero-config Hono builds `.ts`-extension imports and the `@mir/shared` workspace package → test on the first deploy (Phase 9); fallback is a build step
+- [x] Vercel zero-config Hono builds `.ts`-extension imports and the `@mir/shared` workspace package → it did not; deployed as a plain function plus a build step (docs/08 "As deployed")
 - [x] Phase 6 risk: with a minimal prompt Gemma 4 E2B wrote `Line 1: INTENT: Cancel Order` (echoed "Line 1:", label not snake_case). Test the real `PROMPT_V1` early; the parser and escalation must handle it *(resolved: `HEADER_RE`/`SEPARATOR_RE` tolerate the echo, fixtures in `assistant-pure.test.ts`; labels are lower-cased; a label like `Cancel Order` is invalid output → escalation, then refusal `unusable_model_output`)*
 
 ---
@@ -78,8 +78,8 @@ Owner only (accounts and keys; Claude cannot do these):
 - [x] `scripts/seed.ts`: idempotent tenants `acme`, `globex`, `tiny`, `eval`, `reviewer`; hashed keys + prefix; `--reset-usage`; print generated keys once
 - [x] `embeddings/gemini.ts` (768-d, task types, L2-normalize) and `embeddings/ollama.ts` (prefixes, L2-normalize)
 - [x] `scripts/embed_kb.ts`: `--provider gemini|ollama`, batching + delay + resume, cache `data/embeddings/<model>.f32` + `.meta.json` (sha256 of kb.jsonl), `--from-cache-only`, upsert
-- [ ] Phase 9: `waitUntil` for the final metering write when the client disconnects on Vercel (hook `waitUntil` already in `createApp` deps; on Node the handler keeps running, verified)
-- [ ] Phase 9: call `attachDatabasePool(pool)` (`@vercel/functions`) when running on Vercel; needs a docs/11 row
+- [ ] Phase 9 (cut): `waitUntil` for the final metering write when the client disconnects on Vercel; needs `@vercel/functions` (not approved). Documented in docs/08
+- [ ] Phase 9 (cut): `attachDatabasePool(pool)` (`@vercel/functions`); needs a docs/11 row and approval. The pool is small (`max: 3`)
 - [x] Gemini embedder verified live (768 dims, batch of 3, sim(query, cancel)=0.736 vs OOS 0.506); embedding model id settled
 - [x] `pnpm kb:embed -- --provider gemini`: 1,350 rows cached (`data/embeddings/gemini-embedding-001.*`), resumed across two keys (same model, same vectors)
 - **Verify:** 1350 rows for `nomic-embed-text`; top-5 for "i want to cancel my order" = cancel_order; trigram on "cancel my oorder" ranks cancel_order highest
@@ -136,9 +136,9 @@ Owner only (accounts and keys; Claude cannot do these):
 - **Commit:** `feat(eval): end-to-end eval runner and comparison`
 
 ## Phase 9 — Cloud + deploy (docs/08 §2–3)
-- [ ] Neon: migrate, seed, `kb:embed --provider gemini --from-cache-only` (cache + `gemini-embedding-001` thresholds already committed; no Gemini calls needed)
-- [ ] Vercel gateway project (root `apps/gateway`, `sin1`, `maxDuration: 120`, env, CORS) and console project (root `apps/console`, SPA rewrite, build env)
-- [ ] Deployment Protection off for production
+- [x] Neon: migrate, seed, `kb:embed --provider gemini --from-cache-only` (cache + `gemini-embedding-001` thresholds already committed; no Gemini calls needed)
+- [x] Vercel gateway project (root `apps/gateway`, `sin1`, `maxDuration: 120`, env, CORS) and console project (root `apps/console`, SPA rewrite, build env)
+- [x] Deployment Protection off for production
 - [x] `scripts/smoke.sh` (10 checks): 13/13 PASS locally and in Docker; run against prod after deploy
 - [x] Run eval config A `cloud-minimal` → `eval:compare` → `eval/report.md` (local cloud-profile gateway; run 1: 14 Gemini answers before the 20 RPD cap, run 2: mock only; both committed)
 - **Verify:** smoke all PASS on prod; `curl -N` streams; private window without Vercel login; Neon cold wake succeeds
@@ -156,7 +156,8 @@ Owner only (accounts and keys; Claude cannot do these):
 - [x] `README.md`: live URLs + demo keys, 3 ways to run, diagram, curl examples, eval table, report + video links, dataset license (CDLA-Sharing 1.0), "first request may be slow" note, Docker ≥ 8 GB note
 - **Commit:** `docs: technical report and README`
 - [x] Config A column, gemini-embedding-001 thresholds and `eval:compare` A vs B filled (cloud profile run locally, 2026-10-06)
-- [ ] After deploy: fill REPORT/README placeholders (⏳): live URLs, public demo keys, video link
+- [x] After deploy: live URLs and public demo keys filled in README/REPORT
+- [ ] Video link in README/REPORT (⏳, after recording)
 
 ## Phase 12 — Video + submit
 - [ ] `db:seed --reset-usage` before recording; record per `docs/10` Part D (6–8 min); upload unlisted; link in README

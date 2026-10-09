@@ -66,7 +66,7 @@ Open http://localhost:5173, pick the `acme` tenant (or paste a key), send a ques
 
 ```bash
 curl -N localhost:8787/v1/support/answer -H "authorization: Bearer $SEED_KEY_ACME" \
-  -H "content-type: application/json" -d '{"message":"I want to cancel my order"}'
+  -H "content-type: application/json" -d '{"message":"how do i change my shipping address"}'
 ```
 
 `-N` turns off curl's buffering so you see the events arrive one by one.

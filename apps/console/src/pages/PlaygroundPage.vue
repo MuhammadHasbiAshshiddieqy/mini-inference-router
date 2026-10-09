@@ -13,7 +13,7 @@ import { readSession, writeSession } from "../lib/session.ts";
 // Playground (docs/06 §1): the answer streams in while the inspector fills from the SSE events.
 const CUSTOM = "__custom__";
 const EXAMPLES = [
-  { label: "easy", text: "I want to cancel my order" },
+  { label: "easy", text: "how do i change my shipping address" },
   { label: "typo", text: "i need to cancle the order i made yesterday" },
   { label: "confusable", text: "Has my refund been processed yet?" },
   { label: "out of scope", text: "Can you write me a poem about the sea?" },

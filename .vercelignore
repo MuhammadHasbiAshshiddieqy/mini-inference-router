@@ -1,0 +1,9 @@
+# Vercel CLI deploys from the repo root; this file replaces .gitignore, so list secrets and heavy dirs here.
+.env
+.env.*
+!.env.example
+.venv
+.claude
+node_modules
+.git
+.DS_Store
