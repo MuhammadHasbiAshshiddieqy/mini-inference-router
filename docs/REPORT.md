@@ -195,6 +195,8 @@ lines (`Line 1:`, `Line 2: ---`); the parser now tolerates them, which removed a
 - **Free tiers shape everything:** Gemini generation is capped at **20 requests per day per model**, so the deployed demo answers ~40 questions/day with Gemini (primary + fallback) and then from the mock, visibly labelled. The embedding quota (100 texts/min, 1,000/day per project) caps the KB build and the question rate; beyond it, retrieval degrades to lexical instead of failing. The eval ran sequentially with pauses and still could not finish on Gemini in one day.
 - **No fallback after the first token:** correctness over availability for partially streamed answers.
 - **Thresholds calibrated on a small dev split:** per embedding model, and they move with a different KB; the eval shows they are strict on hard-flag phrasing.
+- **Vote-share cut-offs are design rules, not calibrated:** `high` needs a vote share of at least 0.6 and "strong agreement" at least 0.8 (roughly 3 and 4 of the 5 retrieved examples agreeing; votes are weighted by similarity). They were fixed in the specification before any data existed and were not tuned; only `T_oos` and `T_high` come from the calibration split. Calibrating them on the dev split is the next step.
+- **Small evaluation set:** 32 cases, so one case is 3.7 percentage points; differences of a few points between configurations are not meaningful.
 - **Paraphrase-heavy data:** intent accuracy is optimistic; hard-flag and OOS cases and separate kNN / LLM numbers counter that.
 - **Demo keys in the SPA:** fine for low-quota demo tenants; a private reviewer key goes only in the submission email.
 - **Docker on macOS runs Ollama on CPU:** a small default model in the container; native Ollama is recommended for real use.
