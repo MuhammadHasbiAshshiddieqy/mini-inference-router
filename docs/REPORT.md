@@ -186,6 +186,8 @@ lines (`Line 1:`, `Line 2: ---`); the parser now tolerates them, which removed a
 | Retrieval eval on `gemini-embedding-001` | The free tier allows 1,000 embedded texts per day per project; it was spent on the KB build | Run `pnpm eval:retrieval -- --provider gemini` on a fresh quota day |
 | A clean 27-case Gemini eval in one day | The free tier allows 20 generation requests per day per project per model; run 1 got 14 Gemini answers before the cap, run 2 none. Reported on the real-model answers (n=14) with that caveat | Spread the eval over several project-days, or a paid tier |
 | Full Docker mode A run on the owner's Mac | It pulls several GB into a Docker volume; the wiring was verified without the pull (it degrades to lexical + mock as designed) and mode B ran end to end | `docker compose --profile ollama up --build` |
+| `@vercel/functions` (`waitUntil`, `attachDatabasePool`) | A new dependency needs a docs/11 row and owner approval, and the demo does not need it. If a client disconnects mid-answer on Vercel, that request's final metering write can be frozen before it completes; the connection pool is small (`max: 3`) | `waitUntil` around the final metering write, `attachDatabasePool(pool)` |
+| Two Google AI Studio projects (`router-demo`, `router-eval`) | One Gemini key serves the local eval and the deployed demo, so they share the free-tier cap of 20 generation requests per day per model | Two keys in two Google projects (a separate key can be set in Vercel at any time) |
 
 ## 9. Trade-offs accepted
 

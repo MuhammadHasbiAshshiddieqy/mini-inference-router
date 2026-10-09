@@ -29,7 +29,7 @@ Done by Claude (2026-10-06):
 - [x] pnpm installed (12.9.1, global via npm; Node 26 ships without corepack)
 
 Owner only (accounts and keys; Claude cannot do these):
-- [ ] Two Google AI Studio projects: `router-demo` (Vercel) and `router-eval` (eval + embedding builds); put the eval key in `.env` as `GEMINI_API_KEY`
+- [x] ~~Two Google AI Studio projects~~ **cut**: one Gemini key serves the local eval and Vercel (shared 20 requests/day/model); logged in `docs/REPORT.md` §8
 - [x] Gemini key in `.env` works; `models.list` shows `gemini-3.5-flash`, `gemini-3-flash-preview`, `gemini-embedding-001` (2026-10-06). Embedding model decided: `gemini-embedding-001` (`gemini-embedding-2` returns one vector per batch)
 - [x] Limits observed from real 429s (2026-10-06), recorded in `docs/12` §3: generation **20 req/day/project/model** (3.5 Flash and 3 Flash Preview), embeddings 100 texts/min and 1,000/day per project. Decision rule (RPD < 200) triggered: owner to decide demo strategy (see summary)
 - [x] Neon project (Singapore, Postgres only), pooled connection string saved
@@ -78,8 +78,8 @@ Owner only (accounts and keys; Claude cannot do these):
 - [x] `scripts/seed.ts`: idempotent tenants `acme`, `globex`, `tiny`, `eval`, `reviewer`; hashed keys + prefix; `--reset-usage`; print generated keys once
 - [x] `embeddings/gemini.ts` (768-d, task types, L2-normalize) and `embeddings/ollama.ts` (prefixes, L2-normalize)
 - [x] `scripts/embed_kb.ts`: `--provider gemini|ollama`, batching + delay + resume, cache `data/embeddings/<model>.f32` + `.meta.json` (sha256 of kb.jsonl), `--from-cache-only`, upsert
-- [ ] Phase 9 (cut): `waitUntil` for the final metering write when the client disconnects on Vercel; needs `@vercel/functions` (not approved). Documented in docs/08
-- [ ] Phase 9 (cut): `attachDatabasePool(pool)` (`@vercel/functions`); needs a docs/11 row and approval. The pool is small (`max: 3`)
+- [x] Phase 9 (cut, logged in REPORT §8): `waitUntil` for the final metering write when the client disconnects on Vercel; needs `@vercel/functions` (not approved). Documented in docs/08
+- [x] Phase 9 (cut, logged in REPORT §8): `attachDatabasePool(pool)` (`@vercel/functions`); needs a docs/11 row and approval. The pool is small (`max: 3`)
 - [x] Gemini embedder verified live (768 dims, batch of 3, sim(query, cancel)=0.736 vs OOS 0.506); embedding model id settled
 - [x] `pnpm kb:embed -- --provider gemini`: 1,350 rows cached (`data/embeddings/gemini-embedding-001.*`), resumed across two keys (same model, same vectors)
 - **Verify:** 1350 rows for `nomic-embed-text`; top-5 for "i want to cancel my order" = cancel_order; trigram on "cancel my oorder" ranks cancel_order highest
@@ -162,7 +162,7 @@ Owner only (accounts and keys; Claude cannot do these):
 ## Phase 12 — Video + submit
 - [ ] `db:seed --reset-usage` before recording; record per `docs/10` Part D (6–8 min); upload unlisted; link in README
 - [ ] `db:seed --reset-usage` on Neon; final `smoke.sh` PASS; tag `v1.0.0`
-- [ ] Submission checklist (`docs/10` Part E), incl. `git log -p | grep -i "AIza"` empty
+- [ ] Submission checklist (`docs/10` Part E): 5 of 8 done (public repo + clean-clone tests, README, REPORT, eval files, no secrets in history). Left: smoke on prod right before sending, video plays logged-out, Usage page opens with the admin key
 - [ ] Reply to recruiter with repo, URL, report, video, reviewer key and the read-only admin key for the Usage page (draft in `docs/10` Part F)
 
 ---

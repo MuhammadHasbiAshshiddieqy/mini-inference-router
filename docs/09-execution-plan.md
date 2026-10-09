@@ -29,7 +29,7 @@ run the verification, tick the boxes below, commit, and **stop** with a short su
 - [x] Neon project (Singapore, Postgres only). Pooled connection string saved.
 - [x] Vercel account (CLI login; projects deployed with the CLI, not through the GitHub integration).
 - [x] Mac: Docker Desktop running with **≥ 8 GB memory**. Ollama up to date (`ollama --version`). Models: `gemma4:e2b-mlx` and `nomic-embed-text` (already on the Mac, confirm with `ollama list` and `ollama show gemma4:e2b-mlx`). The container model `gemma4:e2b-it-qat` is **not** pulled on the Mac: the `ollama-pull` service fetches it into the Docker volume, and it is tested in Phase 10.
-- [ ] **Two Google AI Studio projects**: `router-demo` (key for Vercel) and `router-eval` (key for local eval + embedding builds). Record the actual RPM/RPD of `gemini-3.5-flash`, `gemini-3-flash-preview` and the embedding model for each project in `docs/12` §3 and apply its decision rule.
+- [x] ~~Two Google AI Studio projects~~ **cut**: one Gemini key serves the local eval and Vercel; the free-tier limits (docs/12 §3) were recorded from real 429s. Logged in `docs/REPORT.md` §8.
 - [ ] Read `docs/12-free-tier-limits-and-risks.md` once end-to-end.
 - [x] Python 3.10+ available for the one-off data prep. *(Homebrew 3.14 and uv 3.12; `/usr/bin/python3` is 3.9, so call `python3.12` / `uv run` explicitly)*
 

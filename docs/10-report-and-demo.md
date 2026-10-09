@@ -73,7 +73,8 @@ Short version of docs/11-tech-decisions.md §12 (the "not used" table), with a l
 | LLM-as-judge answer metric (docs/07 §3, P1) | First item of the cut order: it spends free-tier quota on every case and a Gemini judge would grade a Gemini answer (self-preference bias). Semantic similarity with one fixed scorer is kept | A judge from a different provider with a fixed rubric, run on a sample |
 | Retrieval-only eval on `gemini-embedding-001` | The free tier allows 1,000 embedded texts per day per project; the quota went to the KB build | `pnpm eval:retrieval -- --provider gemini` on a fresh quota day |
 | Full Docker mode A run on the owner's Mac | Pulls several GB into a Docker volume; the wiring was verified without the pull and mode B ran end to end | `docker compose --profile ollama up --build` |
-| *(add actual cuts made during the build)* | | |
+| `@vercel/functions` (`waitUntil`, `attachDatabasePool`) | A new dependency needs a docs/11 row and owner approval, and the demo does not need it. If a client disconnects mid-answer on Vercel, that request's final metering write can be frozen before it completes; the connection pool is small (`max: 3`) | `waitUntil` around the final metering write, `attachDatabasePool(pool)` |
+| Two Google AI Studio projects (`router-demo`, `router-eval`) | One Gemini key serves the local eval and the deployed demo, so they share the free-tier cap of 20 generation requests per day per model | Two keys in two Google projects (a separate key can be set in Vercel at any time) |
 
 ## Part C: Trade-offs to state explicitly
 
@@ -105,12 +106,12 @@ second take of the fallback segment in case of free-tier 429s.
 
 ## Part E: Submission checklist
 
-- [ ] Repo public/accessible, default branch clean, CI-free but `pnpm -r test` passes from a clean clone.
-- [ ] README has live URLs, demo keys (acme/globex/tiny), 3 ways to run, eval table, links to REPORT.md and the video.
-- [ ] `docs/REPORT.md` complete with real numbers and the "What I cut" section.
-- [ ] `eval/results/*.json` + `eval/report.md` committed.
+- [x] Repo public/accessible, default branch clean, CI-free but `pnpm -r test` passes from a clean clone.
+- [x] README has live URLs, demo keys (acme/globex/tiny), 3 ways to run, eval table, links to REPORT.md. *(video link pending)*
+- [x] `docs/REPORT.md` complete with real numbers and the "What I cut" section.
+- [x] `eval/results/*.json` + `eval/report.md` committed.
 - [ ] Smoke test PASS on prod right before sending; quotas reset.
-- [ ] No secrets in git history (`git log -p | grep -i "AIza"` returns nothing).
+- [x] No secrets in git history. *(9 Oct: the only `AIza` matches are the checklist text itself; no key, no Neon password.)*
 - [ ] Video plays logged-out.
 - [ ] Reviewer can open the Usage page on the deployed console with the admin key from the email (`/admin/*` is read-only).
 
