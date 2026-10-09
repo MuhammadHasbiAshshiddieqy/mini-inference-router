@@ -64,7 +64,7 @@ The original text is quoted first. The traceability matrix after it is how we sa
 > - Code structure and exception handling: invalid input, timeouts, bad model output
 > - Judgement: what you built, what you skipped, and whether you said so
 
-Recruiter email: submit by replying to the email **within 3 calendar days** of receipt (received Tue 6 Oct 2026 13:00 WIB → **Fri 9 Oct 2026, 13:00 WIB**, extended by the owner to **23:59 WIB**).
+Recruiter email: submit by replying to the email **within 3 calendar days** of receipt (received Tue 6 Oct 2026 → **Fri 9 Oct 2026, 23:59 WIB**).
 
 ## 2. Interpretation notes
 
