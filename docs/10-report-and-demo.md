@@ -128,6 +128,7 @@ Thank you for the opportunity. Please find my submission for the Mini Inference 
 - Deployed console: <console url>   (gateway: <gateway url>)
 - Technical report: <github url>/blob/main/docs/REPORT.md
 - Video, technical walkthrough: https://docs.google.com/videos/d/12NTjikhjxePfBKm-jU_RCwF842gjO5h8RrHMXkl_zDk/play?usp=sharing
+- Slides for the technical walkthrough: https://docs.google.com/presentation/d/1ykAKKU6DEkPEIreJ6cv1P6CZ63hHF2etg5Mo1kMrUvE/edit?usp=sharing
 - Video, console demo: https://docs.google.com/videos/d/1OYfKRzPvsmi_xMfU-T_1Jfy9c8K-z1s4ZWvvghAQeT8/play?usp=sharing
 
 Run instructions (cloud, Docker, or local Ollama) are in the README. Public demo keys are listed there.

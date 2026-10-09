@@ -10,7 +10,7 @@ tokens, latency and cost.
 
 - **New to the code (or to JavaScript)?** Start with the one-day guide in [`learn/`](learn/README.md).
 - **Technical report:** [`docs/REPORT.md`](docs/REPORT.md) · **Evaluation:** [`eval/report.md`](eval/report.md)
-- **Live:** console https://mini-router-console.vercel.app · gateway https://mini-router-gateway.vercel.app · **Videos:** [technical walkthrough](https://docs.google.com/videos/d/12NTjikhjxePfBKm-jU_RCwF842gjO5h8RrHMXkl_zDk/play?usp=sharing) · [console demo](https://docs.google.com/videos/d/1OYfKRzPvsmi_xMfU-T_1Jfy9c8K-z1s4ZWvvghAQeT8/play?usp=sharing)
+- **Live:** console https://mini-router-console.vercel.app · gateway https://mini-router-gateway.vercel.app · **Videos:** [technical walkthrough](https://docs.google.com/videos/d/12NTjikhjxePfBKm-jU_RCwF842gjO5h8RrHMXkl_zDk/play?usp=sharing) (with its [slides](https://docs.google.com/presentation/d/1ykAKKU6DEkPEIreJ6cv1P6CZ63hHF2etg5Mo1kMrUvE/edit?usp=sharing)) · [console demo](https://docs.google.com/videos/d/1OYfKRzPvsmi_xMfU-T_1Jfy9c8K-z1s4ZWvvghAQeT8/play?usp=sharing)
 - **Public demo keys** (low quotas, reset before submission), also bundled into the console's tenant menu:
 
   | Tenant | API key | Quota | Policy |
