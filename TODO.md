@@ -157,7 +157,7 @@ Owner only (accounts and keys; Claude cannot do these):
 - **Commit:** `docs: technical report and README`
 - [x] Config A column, gemini-embedding-001 thresholds and `eval:compare` A vs B filled (cloud profile run locally, 2026-10-06)
 - [x] After deploy: live URLs and public demo keys filled in README/REPORT
-- [ ] Video link in README/REPORT (⏳, after recording)
+- [x] Video links in README/REPORT (technical walkthrough and console demo)
 
 ## Phase 12 — Video + submit
 - [ ] `db:seed --reset-usage` before recording; record per `docs/10` Part D (6–8 min); upload unlisted; link in README

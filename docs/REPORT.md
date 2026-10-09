@@ -1,9 +1,9 @@
 # Mini Inference Router: Technical Report
 
-**Live:** console https://mini-router-console.vercel.app · gateway https://mini-router-gateway.vercel.app · **Repo:** https://github.com/MuhammadHasbiAshshiddieqy/mini-inference-router · **Video:** ⏳ _pending_
+**Live:** console https://mini-router-console.vercel.app · gateway https://mini-router-gateway.vercel.app · **Repo:** https://github.com/MuhammadHasbiAshshiddieqy/mini-inference-router · **Videos:** [technical walkthrough](https://docs.google.com/videos/d/12NTjikhjxePfBKm-jU_RCwF842gjO5h8RrHMXkl_zDk/play?usp=sharing) · [console demo](https://docs.google.com/videos/d/1OYfKRzPvsmi_xMfU-T_1Jfy9c8K-z1s4ZWvvghAQeT8/play?usp=sharing)
 
 > Status (9 Oct 2026): built, measured and deployed (Vercel + Neon, `PROFILE=cloud`). Numbers were measured on the local
-> profile and on the cloud profile run locally (Gemini). The only item marked ⏳ is the video link.
+> profile and on the cloud profile run locally (Gemini). Nothing is pending.
 
 ## 1. Summary
 

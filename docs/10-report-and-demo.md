@@ -127,7 +127,8 @@ Thank you for the opportunity. Please find my submission for the Mini Inference 
 - Repository: <github url>
 - Deployed console: <console url>   (gateway: <gateway url>)
 - Technical report: <github url>/blob/main/docs/REPORT.md
-- Video demo: <video url>
+- Video, technical walkthrough: https://docs.google.com/videos/d/12NTjikhjxePfBKm-jU_RCwF842gjO5h8RrHMXkl_zDk/play?usp=sharing
+- Video, console demo: https://docs.google.com/videos/d/1OYfKRzPvsmi_xMfU-T_1Jfy9c8K-z1s4ZWvvghAQeT8/play?usp=sharing
 
 Run instructions (cloud, Docker, or local Ollama) are in the README. Public demo keys are listed there.
 A dedicated reviewer key with a larger quota: <reviewer key>
