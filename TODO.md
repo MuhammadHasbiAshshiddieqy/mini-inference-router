@@ -160,8 +160,8 @@ Owner only (accounts and keys; Claude cannot do these):
 - [x] Video links in README/REPORT (technical walkthrough and console demo)
 
 ## Phase 12 — Video + submit
-- [ ] `db:seed --reset-usage` before recording; record per `docs/10` Part D (6–8 min); upload unlisted; link in README
-- [ ] `db:seed --reset-usage` on Neon; final `smoke.sh` PASS; tag `v1.0.0`
+- [x] Videos recorded and uploaded; links in README/REPORT (technical walkthrough + slides, console demo)
+- [ ] Force-push the cleaned history (owner), then `db:seed --reset-usage` on Neon; final `smoke.sh` PASS; tag `v1.0.0`
 - [ ] Submission checklist (`docs/10` Part E): 5 of 8 done (public repo + clean-clone tests, README, REPORT, eval files, no secrets in history). Left: smoke on prod right before sending, video plays logged-out, Usage page opens with the admin key
 - [ ] Reply to recruiter with repo, URL, report, video, reviewer key and the read-only admin key for the Usage page (draft in `docs/10` Part F)
 

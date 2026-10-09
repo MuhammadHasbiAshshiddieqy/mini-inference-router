@@ -135,6 +135,6 @@ Read: `docs/10`.
 **Commit:** `docs: technical report and README`
 
 ## Phase 12: Video + submit
-- [ ] Record per the script in `docs/10`. Upload (YouTube unlisted / Loom / Drive). Link in README.
+- [x] Record per the script in `docs/10`. Upload (YouTube unlisted / Loom / Drive). Link in README. *(Google Vids + Slides, linked in README/REPORT)*
 - [ ] `db:seed --reset-usage` on Neon. Final `smoke.sh` PASS. Tag `v1.0.0`.
 - [ ] Reply to the recruiter's email with repo, URL, report link and video link (draft in `docs/10`).

@@ -107,7 +107,7 @@ second take of the fallback segment in case of free-tier 429s.
 ## Part E: Submission checklist
 
 - [x] Repo public/accessible, default branch clean, CI-free but `pnpm -r test` passes from a clean clone.
-- [x] README has live URLs, demo keys (acme/globex/tiny), 3 ways to run, eval table, links to REPORT.md. *(video link pending)*
+- [x] README has live URLs, demo keys (acme/globex/tiny), 3 ways to run, eval table, links to REPORT.md.
 - [x] `docs/REPORT.md` complete with real numbers and the "What I cut" section.
 - [x] `eval/results/*.json` + `eval/report.md` committed.
 - [ ] Smoke test PASS on prod right before sending; quotas reset.
