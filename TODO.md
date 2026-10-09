@@ -4,7 +4,7 @@ Consolidated, actionable checklist built from `CLAUDE.md` and `docs/01`–`docs/
 `docs/01-requirements.md` remains the source of truth; `docs/09-execution-plan.md` holds the canonical phase checkboxes.
 Tick items here **and** in `docs/09` at the end of each phase.
 
-**Deadline:** Fri 9 Oct 2026, 13:00 WIB · **Target submit:** before 12:00 WIB (1 h buffer).
+**Deadline:** Fri 9 Oct 2026, 23:59 WIB (extended by the owner from 13:00) · **Target submit:** before 22:59 WIB (1 h buffer).
 
 | When | Phases | Exit criterion |
 |---|---|---|

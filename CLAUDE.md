@@ -8,7 +8,7 @@ A take-home technical assessment ("Code Challenge: Mini Inference Router").
 We build a small **LLM gateway** plus one capability on top of it: a **customer-support assistant**
 that answers from a knowledge base built from the Bitext customer-support dataset and returns the detected intent.
 
-- Deadline: **Friday 9 Oct 2026, 13:00 WIB (UTC+7)**: 3 calendar days from receipt. The work itself is scoped as about one day of effort.
+- Deadline: **Friday 9 Oct 2026, 23:59 WIB (UTC+7)**, extended by the owner from 13:00: 3 calendar days from receipt. The work itself is scoped as about one day of effort.
 - Deliverables: GitHub repo (code + docs), deployed URL, technical report, video demo.
 - Reviewers judge: correctness of the request path, reasoned and observable routing/fallback, accurate measurement,
   code structure and exception handling, and **judgement: what we built, what we skipped, and whether we said so**.

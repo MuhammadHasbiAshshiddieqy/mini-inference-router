@@ -8,7 +8,7 @@ How to use this with Claude Code: run `/phase <n>` (see `.claude/commands/phase.
 "Execute Phase <n> of docs/09-execution-plan.md". Claude must read `CLAUDE.md` plus the docs listed for that phase, implement,
 run the verification, tick the boxes below, commit, and **stop** with a short summary and any proposed cuts.
 
-## Timeline (deadline Fri 9 Oct 2026, 13:00 WIB)
+## Timeline (deadline Fri 9 Oct 2026, 23:59 WIB; originally 13:00)
 
 | When | Phases | Exit criterion |
 |---|---|---|
