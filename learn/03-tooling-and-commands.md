@@ -73,6 +73,21 @@ curl -N localhost:8787/v1/support/answer -H "authorization: Bearer $SEED_KEY_ACM
 
 Without Ollama the gateway still works: the router falls back to the mock backend, and the console shows why.
 
+### Running an evaluation (after the steps above)
+
+The evaluation needs the gateway **and** Ollama running (it also uses `nomic-embed-text` to score answers), and
+the `eval` tenant's key in `.env` as `SEED_KEY_EVAL` (set it before `db:seed`, or copy the key that `db:seed` prints once).
+
+```bash
+pnpm calibrate                                  # only if data/thresholds.json must be regenerated
+pnpm eval:retrieval                             # optional: retrieval-only comparison, no gateway needed
+pnpm eval -- --label local-ollama               # terminal 2, while `pnpm dev` runs in terminal 1 → eval/results/local-ollama.json
+pnpm eval -- --label cloud-minimal --gateway https://<deployed-url> --key <eval key> --delay-ms 6000
+pnpm eval:compare -- eval/results/local-ollama.json eval/results/cloud-minimal.json   # → eval/report.md
+```
+
+Add `--limit 3` to the first `pnpm eval` for a quick trial.
+
 ## Every command
 
 Run from the repository root.
@@ -87,14 +102,14 @@ Run from the repository root.
 | `REQUIRE_DB=1 pnpm -r test` | Same, but fail (instead of skip) if Postgres is not running |
 | `pnpm format` | Format all files with Prettier |
 | `pnpm db:migrate` | Apply SQL migrations ([`scripts/migrate.ts`](../scripts/migrate.ts)) |
-| `pnpm db:seed [-- --reset-usage]` | Create/update tenants; optionally reset their used quota |
+| `pnpm db:seed [-- --reset-usage] [--with-eval]` | Create/update tenants; optionally reset their used quota. `--with-eval` also creates the `eval` tenant when `PROFILE=cloud` (locally it is always created) |
 | `pnpm kb:embed -- --provider ollama\|gemini [--from-cache-only]` | Embed the knowledge base (cached in `data/embeddings/`) and load it into the database |
 | `pnpm calibrate [-- --provider …]` | Compute refusal thresholds from the dev split → `data/thresholds.json` |
-| `pnpm eval:retrieval` | Compare retrieval modes without calling a model |
-| `pnpm eval -- --label <name> --key <eval key>` | End-to-end evaluation through a running gateway |
-| `pnpm eval:compare -- a.json b.json` | Write `eval/report.md` |
+| `pnpm eval:retrieval [-- --provider ollama\|gemini]` | Compare retrieval modes without calling a model (default provider: `ollama`) |
+| `pnpm eval -- --label <name> [--key <eval key>] [--gateway <url>] [--delay-ms N] [--limit N]` | End-to-end evaluation through a **running** gateway. Only `--label` is required; the key comes from `--key` or else `SEED_KEY_EVAL` in `.env` |
+| `pnpm eval:compare -- eval/results/a.json eval/results/b.json` | Write `eval/report.md` from two or more result files |
 | `pnpm --filter gateway db:generate` | After editing `db/schema.ts`: generate a new migration |
-| `./scripts/smoke.sh` | Black-box check of any running gateway (needs `BASE`, `KEY`, `TINY`, `GLOBEX`, `ADMIN`) |
+| `BASE=… KEY=… TINY=… GLOBEX=… ADMIN=… ./scripts/smoke.sh` | Black-box check of any running gateway (`BASE` defaults to `http://localhost:8787`; the other four are required: the acme, tiny and globex keys and `ADMIN_API_KEY`) |
 | `docker compose --profile ollama up --build` | The whole stack in Docker |
 
 `pnpm <script> -- --flag` passes `--flag` to the script. `--filter gateway` picks one package by name (the
